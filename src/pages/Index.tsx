@@ -1,11 +1,62 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Activity, Users, Calendar, TrendingUp } from "lucide-react";
 
 const Index = () => {
+  const navigate = useNavigate();
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
+    <div className="min-h-screen bg-gradient-to-br from-primary via-secondary to-accent">
+      <div className="container mx-auto px-4 py-16 flex flex-col items-center justify-center min-h-screen text-white">
+        <div className="text-center space-y-8 max-w-3xl">
+          <div className="flex justify-center">
+            <div className="h-24 w-24 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-2xl">
+              <Activity className="h-12 w-12 text-white" />
+            </div>
+          </div>
+          
+          <h1 className="text-5xl md:text-6xl font-bold">Activity Buddy</h1>
+          <p className="text-xl md:text-2xl text-white/90">
+            Find your perfect fitness companion and stay motivated together
+          </p>
+
+          <div className="grid md:grid-cols-3 gap-6 mt-12">
+            <div className="bg-white/10 backdrop-blur-sm p-6 rounded-xl">
+              <Users className="h-8 w-8 mb-3 mx-auto" />
+              <h3 className="font-semibold mb-2">Find Buddies</h3>
+              <p className="text-sm text-white/80">Connect with people nearby who share your fitness interests</p>
+            </div>
+            <div className="bg-white/10 backdrop-blur-sm p-6 rounded-xl">
+              <Calendar className="h-8 w-8 mb-3 mx-auto" />
+              <h3 className="font-semibold mb-2">Join Groups</h3>
+              <p className="text-sm text-white/80">Participate in local fitness events and group activities</p>
+            </div>
+            <div className="bg-white/10 backdrop-blur-sm p-6 rounded-xl">
+              <TrendingUp className="h-8 w-8 mb-3 mx-auto" />
+              <h3 className="font-semibold mb-2">Stay Motivated</h3>
+              <p className="text-sm text-white/80">Track progress, earn badges, and maintain your streaks</p>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mt-12">
+            <Button 
+              size="lg" 
+              variant="secondary"
+              className="text-lg px-8 shadow-xl hover:scale-105 transition-transform"
+              onClick={() => navigate("/auth")}
+            >
+              Get Started
+            </Button>
+            <Button 
+              size="lg" 
+              variant="outline"
+              className="text-lg px-8 bg-white/10 backdrop-blur-sm border-white/30 text-white hover:bg-white/20 shadow-xl hover:scale-105 transition-transform"
+              onClick={() => navigate("/auth")}
+            >
+              Sign In
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   );
