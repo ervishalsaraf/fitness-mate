@@ -8,6 +8,30 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Activity } from "lucide-react";
+import { z } from "zod";
+
+const signUpSchema = z.object({
+  fullName: z.string()
+    .trim()
+    .min(2, "Name must be at least 2 characters")
+    .max(100, "Name too long")
+    .regex(/^[a-zA-Z\s'-]+$/, "Name contains invalid characters"),
+  email: z.string()
+    .trim()
+    .email("Invalid email address")
+    .max(255, "Email too long"),
+  password: z.string()
+    .min(8, "Password must be at least 8 characters")
+    .max(128, "Password too long")
+    .regex(/[A-Z]/, "Password must contain an uppercase letter")
+    .regex(/[a-z]/, "Password must contain a lowercase letter")
+    .regex(/[0-9]/, "Password must contain a number")
+});
+
+const signInSchema = z.object({
+  email: z.string().trim().email("Invalid email address"),
+  password: z.string().min(1, "Password is required")
+});
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -22,11 +46,24 @@ const Auth = () => {
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
 
+    // Validate inputs
+    const result = signUpSchema.safeParse({ fullName, email, password });
+    if (!result.success) {
+      setIsLoading(false);
+      const firstError = result.error.errors[0];
+      toast({
+        title: "Validation Error",
+        description: firstError.message,
+        variant: "destructive",
+      });
+      return;
+    }
+
     const { error } = await supabase.auth.signUp({
-      email,
-      password,
+      email: result.data.email,
+      password: result.data.password,
       options: {
-        data: { full_name: fullName },
+        data: { full_name: result.data.fullName },
         emailRedirectTo: `${window.location.origin}/`
       }
     });
@@ -55,7 +92,23 @@ const Auth = () => {
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    // Validate inputs
+    const result = signInSchema.safeParse({ email, password });
+    if (!result.success) {
+      setIsLoading(false);
+      const firstError = result.error.errors[0];
+      toast({
+        title: "Validation Error",
+        description: firstError.message,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const { error } = await supabase.auth.signInWithPassword({ 
+      email: result.data.email, 
+      password: result.data.password 
+    });
     setIsLoading(false);
 
     if (error) {
@@ -145,9 +198,12 @@ const Auth = () => {
                     name="password"
                     type="password"
                     placeholder="••••••••"
-                    minLength={6}
+                    minLength={8}
                     required
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Must be at least 8 characters with uppercase, lowercase, and number
+                  </p>
                 </div>
                 <Button type="submit" className="w-full" disabled={isLoading}>
                   {isLoading ? "Creating account..." : "Create Account"}

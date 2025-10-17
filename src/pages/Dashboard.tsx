@@ -50,37 +50,69 @@ const Dashboard = () => {
   }, [navigate]);
 
   const loadNearbyBuddies = async () => {
+    if (!user) return;
+    
     setLoading(true);
     
-    // Fetch profiles with their preferences
-    const { data: profiles, error: profilesError } = await supabase
-      .from("profiles")
-      .select(`
-        id,
-        full_name,
-        skill_level,
-        activity_preferences(activity_type),
-        time_preferences(time_slot)
-      `)
-      .limit(10);
+    try {
+      // Only fetch profiles of accepted buddy connections
+      const { data, error } = await supabase
+        .from("buddy_connections")
+        .select(`
+          id,
+          status,
+          requester_id,
+          receiver_id,
+          requester:profiles!buddy_connections_requester_id_fkey (
+            id,
+            full_name,
+            skill_level,
+            activity_preferences (activity_type),
+            time_preferences (time_slot)
+          ),
+          receiver:profiles!buddy_connections_receiver_id_fkey (
+            id,
+            full_name,
+            skill_level,
+            activity_preferences (activity_type),
+            time_preferences (time_slot)
+          )
+        `)
+        .eq("status", "accepted");
 
-    if (profilesError) {
-      console.error("Error loading buddies:", profilesError);
+      if (error) {
+        console.error("Error loading buddies:", error);
+        setLoading(false);
+        return;
+      }
+
+      // Format the data - get the profile that is NOT the current user
+      const formattedProfiles: Profile[] = (data || []).map((connection: any) => {
+        const profile = connection.requester_id === user.id 
+          ? connection.receiver 
+          : connection.requester;
+        
+        return {
+          id: profile.id,
+          full_name: profile.full_name,
+          skill_level: profile.skill_level,
+          activities: profile.activity_preferences?.map((p: any) => p.activity_type) || [],
+          times: profile.time_preferences?.map((p: any) => p.time_slot) || [],
+          distance: Math.floor(Math.random() * 5) + 0.5, // Mock distance
+        };
+      });
+
+      setNearbyBuddies(formattedProfiles);
+    } catch (error) {
+      console.error("Error loading buddies:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load buddy connections",
+        variant: "destructive",
+      });
+    } finally {
       setLoading(false);
-      return;
     }
-
-    const formattedProfiles: Profile[] = (profiles || []).map((p: any) => ({
-      id: p.id,
-      full_name: p.full_name,
-      skill_level: p.skill_level,
-      activities: p.activity_preferences?.map((a: any) => a.activity_type) || [],
-      times: p.time_preferences?.map((t: any) => t.time_slot) || [],
-      distance: Math.floor(Math.random() * 10) + 1, // Mock distance
-    }));
-
-    setNearbyBuddies(formattedProfiles);
-    setLoading(false);
   };
 
   const handleSignOut = async () => {
