@@ -252,9 +252,9 @@ const Dashboard = () => {
                 <div className="text-center py-12 space-y-4">
                   <Calendar className="h-12 w-12 mx-auto text-muted-foreground" />
                   <div>
-                    <p className="text-muted-foreground">No groups yet</p>
+                    <p className="text-muted-foreground">Browse public events or create your own</p>
                     <Button className="mt-4" onClick={() => navigate("/groups")}>
-                      Create a Group
+                      View All Events
                     </Button>
                   </div>
                 </div>
