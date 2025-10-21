@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { MapPin, Calendar, Users, TrendingUp, LogOut, User as UserIcon } from "lucide-react";
+import { MapPin, Calendar, Users, TrendingUp, LogOut, User as UserIcon, Plus } from "lucide-react";
 
 interface Profile {
   id: string;
@@ -143,6 +143,18 @@ const Dashboard = () => {
     }
   };
 
+  const handleCreateEvent = () => {
+    if (!user) {
+      toast({
+        title: "Sign up required",
+        description: "Please sign up to create events",
+      });
+      navigate("/auth");
+      return;
+    }
+    navigate("/groups");
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
       <header className="border-b bg-card/80 backdrop-blur-sm sticky top-0 z-10 shadow-sm">
@@ -162,15 +174,23 @@ const Dashboard = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        <Tabs defaultValue="buddies" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 max-w-2xl mx-auto">
+        <Tabs defaultValue="buddies" className="space-y-6" onValueChange={(value) => {
+          if (value === "create") {
+            handleCreateEvent();
+          }
+        }}>
+          <TabsList className="grid w-full grid-cols-5 max-w-3xl mx-auto">
             <TabsTrigger value="buddies">
               <Users className="h-4 w-4 mr-2" />
               Buddies
             </TabsTrigger>
             <TabsTrigger value="groups">
               <Calendar className="h-4 w-4 mr-2" />
-              Groups
+              Events
+            </TabsTrigger>
+            <TabsTrigger value="create">
+              <Plus className="h-4 w-4 mr-2" />
+              Create
             </TabsTrigger>
             <TabsTrigger value="stats">
               <TrendingUp className="h-4 w-4 mr-2" />
