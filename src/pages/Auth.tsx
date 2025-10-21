@@ -33,6 +33,10 @@ const signInSchema = z.object({
   password: z.string().min(1, "Password is required")
 });
 
+const resetPasswordSchema = z.object({
+  email: z.string().trim().email("Invalid email address").max(255, "Email too long")
+});
+
 const Auth = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -122,6 +126,45 @@ const Auth = () => {
     }
   };
 
+  const handleResetPassword = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsLoading(true);
+    const formData = new FormData(e.currentTarget);
+    const email = formData.get("email") as string;
+
+    // Validate email
+    const result = resetPasswordSchema.safeParse({ email });
+    if (!result.success) {
+      setIsLoading(false);
+      const firstError = result.error.errors[0];
+      toast({
+        title: "Validation Error",
+        description: firstError.message,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const { error } = await supabase.auth.resetPasswordForEmail(result.data.email, {
+      redirectTo: `${window.location.origin}/auth?reset=true`,
+    });
+
+    setIsLoading(false);
+
+    if (error) {
+      toast({
+        title: "Reset failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Check your email",
+        description: "We've sent you a password reset link.",
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-secondary/5 to-accent/10 p-4">
       <Card className="w-full max-w-md shadow-lg">
@@ -136,9 +179,10 @@ const Auth = () => {
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="signin" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="signin">Sign In</TabsTrigger>
               <TabsTrigger value="signup">Sign Up</TabsTrigger>
+              <TabsTrigger value="reset">Reset</TabsTrigger>
             </TabsList>
             
             <TabsContent value="signin">
@@ -207,6 +251,27 @@ const Auth = () => {
                 </div>
                 <Button type="submit" className="w-full" disabled={isLoading}>
                   {isLoading ? "Creating account..." : "Create Account"}
+                </Button>
+              </form>
+            </TabsContent>
+
+            <TabsContent value="reset">
+              <form onSubmit={handleResetPassword} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="reset-email">Email</Label>
+                  <Input
+                    id="reset-email"
+                    name="email"
+                    type="email"
+                    placeholder="you@example.com"
+                    required
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Enter your email and we'll send you a password reset link
+                  </p>
+                </div>
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading ? "Sending..." : "Send Reset Link"}
                 </Button>
               </form>
             </TabsContent>
