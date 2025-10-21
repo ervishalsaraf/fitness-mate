@@ -169,6 +169,35 @@ export type Database = {
           },
         ]
       }
+      group_invites: {
+        Row: {
+          created_at: string | null
+          group_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          group_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          group_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_invites_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       group_members: {
         Row: {
           group_id: string
@@ -212,6 +241,7 @@ export type Database = {
           creator_id: string
           description: string | null
           id: string
+          invite_code: string | null
           location_lat: number
           location_lng: number
           location_name: string
@@ -219,6 +249,7 @@ export type Database = {
           scheduled_time: string
           title: string
           updated_at: string | null
+          visibility: Database["public"]["Enums"]["event_visibility"]
         }
         Insert: {
           activity_type: Database["public"]["Enums"]["activity_type"]
@@ -226,6 +257,7 @@ export type Database = {
           creator_id: string
           description?: string | null
           id?: string
+          invite_code?: string | null
           location_lat: number
           location_lng: number
           location_name: string
@@ -233,6 +265,7 @@ export type Database = {
           scheduled_time: string
           title: string
           updated_at?: string | null
+          visibility?: Database["public"]["Enums"]["event_visibility"]
         }
         Update: {
           activity_type?: Database["public"]["Enums"]["activity_type"]
@@ -240,6 +273,7 @@ export type Database = {
           creator_id?: string
           description?: string | null
           id?: string
+          invite_code?: string | null
           location_lat?: number
           location_lng?: number
           location_name?: string
@@ -247,6 +281,7 @@ export type Database = {
           scheduled_time?: string
           title?: string
           updated_at?: string | null
+          visibility?: Database["public"]["Enums"]["event_visibility"]
         }
         Relationships: [
           {
@@ -470,6 +505,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_invite_code: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -488,6 +527,7 @@ export type Database = {
         | "walking"
         | "gym"
       app_role: "admin" | "user"
+      event_visibility: "public" | "private"
       gender: "male" | "female" | "other" | "prefer_not_to_say"
       skill_level: "beginner" | "intermediate" | "advanced"
       time_slot: "morning" | "afternoon" | "evening"
@@ -628,6 +668,7 @@ export const Constants = {
         "gym",
       ],
       app_role: ["admin", "user"],
+      event_visibility: ["public", "private"],
       gender: ["male", "female", "other", "prefer_not_to_say"],
       skill_level: ["beginner", "intermediate", "advanced"],
       time_slot: ["morning", "afternoon", "evening"],
