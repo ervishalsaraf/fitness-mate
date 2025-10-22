@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Bike, Dumbbell, PersonStanding, Waves, Mountain, Heart, Users } from "lucide-react";
+import { Bike, Dumbbell, PersonStanding, Waves, Mountain, Heart, Users, Target, Disc, CircleDot } from "lucide-react";
 
 const activities = [
   { value: "jogging", label: "Jogging", icon: PersonStanding },
@@ -15,6 +15,9 @@ const activities = [
   { value: "trekking", label: "Trekking", icon: Mountain },
   { value: "walking", label: "Walking", icon: PersonStanding },
   { value: "gym", label: "Gym", icon: Dumbbell },
+  { value: "cricket", label: "Cricket", icon: Target },
+  { value: "football", label: "Football", icon: Disc },
+  { value: "basketball", label: "Basketball", icon: CircleDot },
 ];
 
 const timeSlots = [

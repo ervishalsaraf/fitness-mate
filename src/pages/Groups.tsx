@@ -17,7 +17,7 @@ import { z } from "zod";
 const groupSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters").max(100, "Title too long"),
   description: z.string().max(500, "Description too long").optional(),
-  activity_type: z.enum(["running", "cycling", "gym", "swimming", "yoga", "hiking"]),
+  activity_type: z.enum(["running", "cycling", "gym", "swimming", "yoga", "hiking", "cricket", "football", "basketball"]),
   location_name: z.string().min(2, "Location name required").max(200),
   location_lat: z.number().min(-90).max(90),
   location_lng: z.number().min(-180).max(180),
@@ -366,6 +366,9 @@ const Groups = () => {
                       <SelectItem value="swimming">Swimming</SelectItem>
                       <SelectItem value="yoga">Yoga</SelectItem>
                       <SelectItem value="hiking">Hiking</SelectItem>
+                      <SelectItem value="cricket">Cricket</SelectItem>
+                      <SelectItem value="football">Football</SelectItem>
+                      <SelectItem value="basketball">Basketball</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
