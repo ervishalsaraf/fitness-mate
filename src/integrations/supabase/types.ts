@@ -505,10 +505,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      generate_invite_code: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      generate_invite_code: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -526,6 +523,9 @@ export type Database = {
         | "trekking"
         | "walking"
         | "gym"
+        | "cricket"
+        | "football"
+        | "basketball"
       app_role: "admin" | "user"
       event_visibility: "public" | "private"
       gender: "male" | "female" | "other" | "prefer_not_to_say"
@@ -666,6 +666,9 @@ export const Constants = {
         "trekking",
         "walking",
         "gym",
+        "cricket",
+        "football",
+        "basketball",
       ],
       app_role: ["admin", "user"],
       event_visibility: ["public", "private"],
