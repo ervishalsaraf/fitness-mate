@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Activity } from "lucide-react";
+import { Activity, ArrowLeft } from "lucide-react";
 import { z } from "zod";
 
 const signUpSchema = z.object({
@@ -167,8 +167,16 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-secondary/5 to-accent/10 p-4">
-      <Card className="w-full max-w-md shadow-lg">
+      <Card className="w-full max-w-md shadow-lg relative">
         <CardHeader className="text-center space-y-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute top-4 left-4"
+            onClick={() => navigate("/")}
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
           <div className="flex justify-center">
             <div className="h-16 w-16 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-md">
               <Activity className="h-8 w-8 text-white" />
