@@ -56,6 +56,18 @@ const Index = () => {
               Sign In
             </Button>
           </div>
+          
+          <div className="mt-8 text-center">
+            <p className="text-white/80 mb-3">Want to create an event?</p>
+            <Button 
+              size="lg" 
+              className="text-lg px-8 shadow-xl hover:scale-105 transition-transform"
+              onClick={() => navigate("/auth")}
+            >
+              <Calendar className="mr-2 h-5 w-5" />
+              Create Event
+            </Button>
+          </div>
         </div>
       </div>
     </div>
