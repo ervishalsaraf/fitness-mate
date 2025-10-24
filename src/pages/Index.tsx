@@ -83,7 +83,7 @@ const Index = () => {
                   <img 
                     src={activity.icon} 
                     alt={activity.name}
-                    className="w-16 h-16 object-contain filter brightness-0 invert"
+                    className="w-16 h-16 object-contain"
                   />
                   <span className="text-sm font-medium">{activity.name}</span>
                 </div>
