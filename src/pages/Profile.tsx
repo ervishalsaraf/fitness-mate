@@ -265,6 +265,7 @@ const Profile = () => {
             </div>
             <CardDescription>
               Share Activity Buddy with friends and grow your fitness community
+              {referralStats.count > 0 && ` · ${referralStats.count} friend${referralStats.count > 1 ? 's' : ''} invited`}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -298,10 +299,24 @@ const Profile = () => {
               </Button>
             </div>
 
-            <div className="pt-4 border-t">
+            <div className="pt-4 border-t space-y-4">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Friends Invited</span>
                 <span className="text-2xl font-bold text-primary">{referralStats.count}</span>
+              </div>
+              
+              <div className="p-4 bg-muted/50 rounded-lg border border-border">
+                <p className="text-sm text-muted-foreground mb-2">
+                  💡 <span className="font-semibold">Tip:</span> You can also invite friends directly to specific events!
+                </p>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => navigate('/groups')} 
+                  className="w-full"
+                >
+                  View Events & Invite Friends
+                </Button>
               </div>
             </div>
           </CardContent>

@@ -382,6 +382,7 @@ export type Database = {
       referrals: {
         Row: {
           created_at: string | null
+          group_id: string | null
           id: string
           referral_code: string
           referred_id: string
@@ -390,6 +391,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          group_id?: string | null
           id?: string
           referral_code: string
           referred_id: string
@@ -398,6 +400,7 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          group_id?: string | null
           id?: string
           referral_code?: string
           referred_id?: string
@@ -405,6 +408,13 @@ export type Database = {
           status?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "referrals_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "referrals_referred_id_fkey"
             columns: ["referred_id"]

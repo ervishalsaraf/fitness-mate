@@ -43,10 +43,14 @@ const Auth = () => {
   const [searchParams] = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
   const [referralCode, setReferralCode] = useState<string | null>(null);
+  const [eventInviteCode, setEventInviteCode] = useState<string | null>(null);
   const [referrerName, setReferrerName] = useState<string | null>(null);
+  const [eventTitle, setEventTitle] = useState<string | null>(null);
 
   useEffect(() => {
     const refCode = searchParams.get("ref");
+    const eventCode = searchParams.get("event");
+    
     if (refCode) {
       setReferralCode(refCode);
       // Fetch referrer's name
@@ -58,6 +62,21 @@ const Auth = () => {
         .then(({ data }) => {
           if (data) {
             setReferrerName(data.full_name);
+          }
+        });
+    }
+
+    if (eventCode) {
+      setEventInviteCode(eventCode);
+      // Fetch event title
+      supabase
+        .from("groups")
+        .select("title")
+        .eq("invite_code", eventCode)
+        .single()
+        .then(({ data }) => {
+          if (data) {
+            setEventTitle(data.title);
           }
         });
     }
@@ -93,7 +112,7 @@ const Auth = () => {
       }
     });
 
-    // Track referral if code exists
+    // Track referral and event invite if codes exist
     if (!error && authData.user && referralCode) {
       const { data: referrerProfile } = await supabase
         .from("profiles")
@@ -102,10 +121,42 @@ const Auth = () => {
         .single();
 
       if (referrerProfile) {
+        let groupId = null;
+        
+        // If there's an event invite, get the group_id and auto-join
+        if (eventInviteCode) {
+          const { data: group } = await supabase
+            .from("groups")
+            .select("id")
+            .eq("invite_code", eventInviteCode)
+            .single();
+          
+          if (group) {
+            groupId = group.id;
+            
+            // Auto-join the new user to the event
+            await supabase
+              .from("group_members")
+              .insert({
+                group_id: group.id,
+                user_id: authData.user.id,
+              });
+
+            await supabase
+              .from("group_invites")
+              .insert({
+                group_id: group.id,
+                user_id: authData.user.id,
+              });
+          }
+        }
+
+        // Insert referral with optional group_id
         await supabase.from("referrals").insert({
           referrer_id: referrerProfile.id,
           referred_id: authData.user.id,
           referral_code: referralCode,
+          group_id: groupId,
         });
       }
     }
@@ -223,10 +274,19 @@ const Auth = () => {
             </div>
           </div>
           <CardTitle className="text-3xl font-bold">Activity Buddy</CardTitle>
-          <CardDescription>
-            {referrerName 
-              ? `${referrerName} invited you to join!` 
-              : "Find your perfect fitness companion"}
+          <CardDescription className="space-y-2">
+            <div>
+              {referrerName 
+                ? `${referrerName} invited you to join!` 
+                : "Find your perfect fitness companion"}
+            </div>
+            {eventTitle && (
+              <div className="p-3 bg-primary/10 rounded-lg border border-primary/20 text-sm">
+                <p className="font-semibold text-primary">
+                  You'll be automatically added to: {eventTitle}
+                </p>
+              </div>
+            )}
           </CardDescription>
         </CardHeader>
         <CardContent>
