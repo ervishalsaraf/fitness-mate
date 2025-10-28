@@ -21,7 +21,21 @@ const groupSchema = z.object({
   location_name: z.string().min(2, "Location name required").max(200),
   location_lat: z.number().min(-90).max(90),
   location_lng: z.number().min(-180).max(180),
-  scheduled_time: z.string().min(1, "Scheduled time required"),
+  scheduled_time: z.string().min(1, "Scheduled time required").refine((date) => {
+    const selectedDate = new Date(date);
+    const now = new Date();
+    const sixHoursFromNow = new Date(now.getTime() + 6 * 60 * 60 * 1000);
+    
+    if (selectedDate < now) {
+      return false;
+    }
+    if (selectedDate < sixHoursFromNow) {
+      return false;
+    }
+    return true;
+  }, {
+    message: "Event must be scheduled at least 6 hours from now"
+  }),
   max_participants: z.number().int().min(2).max(100),
   visibility: z.enum(["public", "private"]),
 });
@@ -496,8 +510,10 @@ const Groups = () => {
                     type="datetime-local"
                     value={formData.scheduled_time}
                     onChange={(e) => setFormData({ ...formData, scheduled_time: e.target.value })}
+                    min={new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString().slice(0, 16)}
                     required
                   />
+                  <p className="text-xs text-muted-foreground mt-1">Must be at least 6 hours from now</p>
                 </div>
 
                 <div>
