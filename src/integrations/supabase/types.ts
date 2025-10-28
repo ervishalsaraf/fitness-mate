@@ -343,6 +343,7 @@ export type Database = {
           id: string
           location_lat: number | null
           location_lng: number | null
+          referral_code: string | null
           skill_level: Database["public"]["Enums"]["skill_level"] | null
           updated_at: string | null
         }
@@ -357,6 +358,7 @@ export type Database = {
           id: string
           location_lat?: number | null
           location_lng?: number | null
+          referral_code?: string | null
           skill_level?: Database["public"]["Enums"]["skill_level"] | null
           updated_at?: string | null
         }
@@ -371,10 +373,53 @@ export type Database = {
           id?: string
           location_lat?: number | null
           location_lng?: number | null
+          referral_code?: string | null
           skill_level?: Database["public"]["Enums"]["skill_level"] | null
           updated_at?: string | null
         }
         Relationships: []
+      }
+      referrals: {
+        Row: {
+          created_at: string | null
+          id: string
+          referral_code: string
+          referred_id: string
+          referrer_id: string
+          status: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          referral_code: string
+          referred_id: string
+          referrer_id: string
+          status?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          referral_code?: string
+          referred_id?: string
+          referrer_id?: string
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referrals_referred_id_fkey"
+            columns: ["referred_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referrals_referrer_id_fkey"
+            columns: ["referrer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       streaks: {
         Row: {
@@ -506,6 +551,7 @@ export type Database = {
     }
     Functions: {
       generate_invite_code: { Args: never; Returns: string }
+      generate_referral_code: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,7 +40,28 @@ const resetPasswordSchema = z.object({
 const Auth = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
+  const [referralCode, setReferralCode] = useState<string | null>(null);
+  const [referrerName, setReferrerName] = useState<string | null>(null);
+
+  useEffect(() => {
+    const refCode = searchParams.get("ref");
+    if (refCode) {
+      setReferralCode(refCode);
+      // Fetch referrer's name
+      supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("referral_code", refCode)
+        .single()
+        .then(({ data }) => {
+          if (data) {
+            setReferrerName(data.full_name);
+          }
+        });
+    }
+  }, [searchParams]);
 
   const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -63,7 +84,7 @@ const Auth = () => {
       return;
     }
 
-    const { error } = await supabase.auth.signUp({
+    const { data: authData, error } = await supabase.auth.signUp({
       email: result.data.email,
       password: result.data.password,
       options: {
@@ -71,6 +92,23 @@ const Auth = () => {
         emailRedirectTo: `${window.location.origin}/`
       }
     });
+
+    // Track referral if code exists
+    if (!error && authData.user && referralCode) {
+      const { data: referrerProfile } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("referral_code", referralCode)
+        .single();
+
+      if (referrerProfile) {
+        await supabase.from("referrals").insert({
+          referrer_id: referrerProfile.id,
+          referred_id: authData.user.id,
+          referral_code: referralCode,
+        });
+      }
+    }
 
     setIsLoading(false);
 
@@ -83,7 +121,9 @@ const Auth = () => {
     } else {
       toast({
         title: "Welcome!",
-        description: "Your account has been created successfully.",
+        description: referrerName 
+          ? `${referrerName} invited you! Your account has been created.`
+          : "Your account has been created successfully.",
       });
       navigate("/onboarding");
     }
@@ -183,7 +223,11 @@ const Auth = () => {
             </div>
           </div>
           <CardTitle className="text-3xl font-bold">Activity Buddy</CardTitle>
-          <CardDescription>Find your perfect fitness companion</CardDescription>
+          <CardDescription>
+            {referrerName 
+              ? `${referrerName} invited you to join!` 
+              : "Find your perfect fitness companion"}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="signin" className="w-full">

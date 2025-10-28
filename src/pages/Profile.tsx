@@ -8,13 +8,15 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Copy, Share2, Users } from "lucide-react";
 
 const Profile = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [referralCode, setReferralCode] = useState<string>("");
+  const [referralStats, setReferralStats] = useState({ count: 0 });
   const [profile, setProfile] = useState({
     full_name: "",
     age: "",
@@ -25,7 +27,42 @@ const Profile = () => {
 
   useEffect(() => {
     loadProfile();
+    loadReferralData();
   }, []);
+
+  const loadReferralData = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    // Get or generate referral code
+    let { data: profileData } = await supabase
+      .from("profiles")
+      .select("referral_code")
+      .eq("id", user.id)
+      .single();
+
+    if (!profileData?.referral_code) {
+      // Generate new referral code
+      const { data: newCode } = await supabase.rpc("generate_referral_code");
+      if (newCode) {
+        await supabase
+          .from("profiles")
+          .update({ referral_code: newCode })
+          .eq("id", user.id);
+        setReferralCode(newCode);
+      }
+    } else {
+      setReferralCode(profileData.referral_code);
+    }
+
+    // Get referral stats
+    const { count } = await supabase
+      .from("referrals")
+      .select("*", { count: "exact", head: true })
+      .eq("referrer_id", user.id);
+
+    setReferralStats({ count: count || 0 });
+  };
 
   const loadProfile = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -83,6 +120,51 @@ const Profile = () => {
         title: "Success",
         description: "Profile updated successfully",
       });
+    }
+  };
+
+  const getReferralLink = () => {
+    return `${window.location.origin}/auth?ref=${referralCode}`;
+  };
+
+  const copyReferralLink = async () => {
+    const link = getReferralLink();
+    await navigator.clipboard.writeText(link);
+    toast({
+      title: "Copied!",
+      description: "Referral link copied to clipboard",
+    });
+  };
+
+  const shareViaWhatsApp = () => {
+    const message = `Join me on Activity Buddy! Let's work out together 💪 ${getReferralLink()}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, "_blank");
+  };
+
+  const shareViaEmail = () => {
+    const subject = "Join me on Activity Buddy!";
+    const body = `Hey! I'm using Activity Buddy to find fitness buddies and track my activities. Join me using this link: ${getReferralLink()}`;
+    window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  };
+
+  const shareViaSMS = () => {
+    const message = `Join me on Activity Buddy! ${getReferralLink()}`;
+    window.location.href = `sms:?body=${encodeURIComponent(message)}`;
+  };
+
+  const shareViaWeb = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: "Join Activity Buddy",
+          text: "Join me on Activity Buddy! Let's work out together 💪",
+          url: getReferralLink(),
+        });
+      } catch (err) {
+        // User cancelled or share failed
+      }
+    } else {
+      copyReferralLink();
     }
   };
 
@@ -172,6 +254,56 @@ const Profile = () => {
             <Button onClick={handleSave} className="w-full" disabled={saving}>
               {saving ? "Saving..." : "Save Changes"}
             </Button>
+          </CardContent>
+        </Card>
+
+        <Card className="mt-6">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Users className="h-5 w-5 text-primary" />
+              <CardTitle>Invite Friends</CardTitle>
+            </div>
+            <CardDescription>
+              Share Activity Buddy with friends and grow your fitness community
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label>Your Referral Link</Label>
+              <div className="flex gap-2">
+                <Input
+                  value={referralCode ? getReferralLink() : "Loading..."}
+                  readOnly
+                  className="flex-1"
+                />
+                <Button onClick={copyReferralLink} size="icon" variant="outline">
+                  <Copy className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <Button onClick={shareViaWhatsApp} variant="outline" className="w-full">
+                WhatsApp
+              </Button>
+              <Button onClick={shareViaEmail} variant="outline" className="w-full">
+                Email
+              </Button>
+              <Button onClick={shareViaSMS} variant="outline" className="w-full">
+                SMS
+              </Button>
+              <Button onClick={shareViaWeb} variant="outline" className="w-full">
+                <Share2 className="h-4 w-4 mr-2" />
+                Share
+              </Button>
+            </div>
+
+            <div className="pt-4 border-t">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Friends Invited</span>
+                <span className="text-2xl font-bold text-primary">{referralStats.count}</span>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </main>
