@@ -13,28 +13,41 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Calendar, MapPin, Users, Copy, Check, Plus, Share2 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { z } from "zod";
+import { toZonedTime, fromZonedTime } from 'date-fns-tz';
+import { addHours } from 'date-fns';
 
-const groupSchema = z.object({
+const createGroupSchema = (locationTimezone: string) => z.object({
   title: z.string().min(3, "Title must be at least 3 characters").max(100, "Title too long"),
   description: z.string().max(500, "Description too long").optional(),
   activity_type: z.enum(["running", "cycling", "gym", "swimming", "yoga", "hiking", "cricket", "football", "basketball"]),
   location_name: z.string().min(2, "Location name required").max(200),
   location_lat: z.number().min(-90).max(90),
   location_lng: z.number().min(-180).max(180),
-  scheduled_time: z.string().min(1, "Scheduled time required").refine((date) => {
-    const selectedDate = new Date(date);
-    const now = new Date();
-    const sixHoursFromNow = new Date(now.getTime() + 6 * 60 * 60 * 1000);
-    
-    if (selectedDate < now) {
+  scheduled_time: z.string().min(1, "Scheduled time required").refine((dateString) => {
+    try {
+      // Parse the input datetime-local value (which is in the browser's local timezone)
+      const selectedDate = new Date(dateString);
+      
+      // Get current time in the location's timezone
+      const nowInLocationTz = toZonedTime(new Date(), locationTimezone);
+      const sixHoursFromNowInLocationTz = addHours(nowInLocationTz, 6);
+      
+      // Convert selected date to location's timezone for comparison
+      const selectedDateInLocationTz = toZonedTime(selectedDate, locationTimezone);
+      
+      if (selectedDateInLocationTz < nowInLocationTz) {
+        return false;
+      }
+      if (selectedDateInLocationTz < sixHoursFromNowInLocationTz) {
+        return false;
+      }
+      return true;
+    } catch (error) {
+      console.error('Timezone validation error:', error);
       return false;
     }
-    if (selectedDate < sixHoursFromNow) {
-      return false;
-    }
-    return true;
   }, {
-    message: "Event must be scheduled at least 6 hours from now"
+    message: "Event must be scheduled at least 6 hours from now (in the event location's timezone)"
   }),
   max_participants: z.number().int().min(2).max(100),
   visibility: z.enum(["public", "private"]),
@@ -74,6 +87,8 @@ const Groups = () => {
     max_participants: 10,
     visibility: "public",
   });
+  const [locationTimezone, setLocationTimezone] = useState<string>("UTC");
+  const [fetchingTimezone, setFetchingTimezone] = useState(false);
 
   useEffect(() => {
     checkAuth();
@@ -85,6 +100,39 @@ const Groups = () => {
       handleJoinViaInvite(inviteCode);
     }
   }, [searchParams, user]);
+
+  useEffect(() => {
+    const fetchTimezone = async () => {
+      if (formData.location_lat === 0 && formData.location_lng === 0) {
+        return;
+      }
+
+      setFetchingTimezone(true);
+      try {
+        const { data, error } = await supabase.functions.invoke('get-timezone', {
+          body: { lat: formData.location_lat, lng: formData.location_lng }
+        });
+
+        if (error) throw error;
+        
+        if (data?.timezone) {
+          setLocationTimezone(data.timezone);
+        }
+      } catch (error) {
+        console.error('Error fetching timezone:', error);
+        toast({
+          title: "Timezone detection",
+          description: "Could not detect timezone for this location. Using UTC.",
+          variant: "default",
+        });
+        setLocationTimezone('UTC');
+      } finally {
+        setFetchingTimezone(false);
+      }
+    };
+
+    fetchTimezone();
+  }, [formData.location_lat, formData.location_lng]);
 
   const checkAuth = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -184,7 +232,7 @@ const Groups = () => {
   const handleCreateGroup = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const result = groupSchema.safeParse(formData);
+    const result = createGroupSchema(locationTimezone).safeParse(formData);
     if (!result.success) {
       toast({
         title: "Validation error",
@@ -513,7 +561,11 @@ const Groups = () => {
                     min={new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString().slice(0, 16)}
                     required
                   />
-                  <p className="text-xs text-muted-foreground mt-1">Must be at least 6 hours from now</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Must be at least 6 hours from now in the event location's timezone
+                    {locationTimezone !== 'UTC' && ` (${locationTimezone})`}
+                    {fetchingTimezone && ' - Detecting timezone...'}
+                  </p>
                 </div>
 
                 <div>
