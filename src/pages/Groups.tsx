@@ -9,12 +9,14 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Calendar, MapPin, Users, Copy, Check, Plus, Share2 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { z } from "zod";
 import { toZonedTime, fromZonedTime } from 'date-fns-tz';
 import { addHours } from 'date-fns';
+import EventComments from "@/components/EventComments";
 
 
 const createGroupSchema = (locationTimezone: string) => z.object({
@@ -66,6 +68,9 @@ interface Group {
   invite_code: string | null;
   creator_id: string;
   member_count: number;
+  allow_comments: boolean;
+  comments_public: boolean;
+  is_member: boolean;
 }
 
 const Groups = () => {
@@ -87,6 +92,8 @@ const Groups = () => {
     scheduled_time: "",
     max_participants: 10,
     visibility: "public",
+    allow_comments: true,
+    comments_public: true,
   });
   const [locationTimezone, setLocationTimezone] = useState<string>("UTC");
   const [fetchingTimezone, setFetchingTimezone] = useState(false);
@@ -209,9 +216,20 @@ const Groups = () => {
 
       if (error) throw error;
 
-      const formattedGroups = (data || []).map((group: any) => ({
-        ...group,
-        member_count: group.group_members?.[0]?.count || 0,
+      const formattedGroups = await Promise.all((data || []).map(async (group: any) => {
+        // Check if current user is a member
+        const { data: memberData } = await supabase
+          .from('group_members')
+          .select('id')
+          .eq('group_id', group.id)
+          .eq('user_id', user?.id)
+          .maybeSingle();
+
+        return {
+          ...group,
+          member_count: group.group_members?.[0]?.count || 0,
+          is_member: !!memberData,
+        };
       }));
 
       setGroups(formattedGroups);
@@ -308,6 +326,8 @@ const Groups = () => {
           max_participants: formData.max_participants,
           visibility: formData.visibility as any,
           creator_id: user.id,
+          allow_comments: formData.allow_comments,
+          comments_public: formData.comments_public,
         })
         .select()
         .single();
@@ -340,6 +360,8 @@ const Groups = () => {
         scheduled_time: "",
         max_participants: 10,
         visibility: "public",
+        allow_comments: true,
+        comments_public: true,
       });
       setLocationInputValue("");
     } catch (error) {
@@ -668,6 +690,46 @@ const Groups = () => {
                   </RadioGroup>
                 </div>
 
+                <div className="space-y-4 border-t pt-4">
+                  <Label>Comment Settings</Label>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="allow_comments" className="font-normal">
+                        Allow comments on this event
+                      </Label>
+                      <Switch
+                        id="allow_comments"
+                        checked={formData.allow_comments}
+                        onCheckedChange={(checked) => 
+                          setFormData({ ...formData, allow_comments: checked })
+                        }
+                      />
+                    </div>
+                    
+                    {formData.allow_comments && (
+                      <RadioGroup
+                        value={formData.comments_public ? "public" : "private"}
+                        onValueChange={(value) => 
+                          setFormData({ ...formData, comments_public: value === "public" })
+                        }
+                      >
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="public" id="comments-public" />
+                          <Label htmlFor="comments-public" className="font-normal cursor-pointer">
+                            Public comments - All members can see comments
+                          </Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="private" id="comments-private" />
+                          <Label htmlFor="comments-private" className="font-normal cursor-pointer">
+                            Private comments - Only you see comments
+                          </Label>
+                        </div>
+                      </RadioGroup>
+                    )}
+                  </div>
+                </div>
+
                 <div className="flex gap-2 pt-4">
                   <Button type="button" variant="outline" onClick={() => setCreateDialogOpen(false)} className="flex-1">
                     Cancel
@@ -802,6 +864,19 @@ const Groups = () => {
                     >
                       {group.member_count >= group.max_participants ? "Full" : "Join Event"}
                     </Button>
+                  )}
+
+                  {(group.is_member || group.creator_id === user?.id) && (
+                    <div className="mt-4 pt-4 border-t">
+                      <EventComments
+                        groupId={group.id}
+                        isOrganizer={group.creator_id === user?.id}
+                        isMember={group.is_member}
+                        allowComments={group.allow_comments}
+                        commentsPublic={group.comments_public}
+                        currentUserId={user?.id}
+                      />
+                    </div>
                   )}
                 </CardContent>
               </Card>
