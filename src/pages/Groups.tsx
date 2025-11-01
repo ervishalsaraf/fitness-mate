@@ -15,6 +15,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { z } from "zod";
 import { toZonedTime, fromZonedTime } from 'date-fns-tz';
 import { addHours } from 'date-fns';
+import { usePlacesWidget } from "react-google-autocomplete";
 
 const createGroupSchema = (locationTimezone: string) => z.object({
   title: z.string().min(3, "Title must be at least 3 characters").max(100, "Title too long"),
@@ -89,6 +90,31 @@ const Groups = () => {
   });
   const [locationTimezone, setLocationTimezone] = useState<string>("UTC");
   const [fetchingTimezone, setFetchingTimezone] = useState(false);
+  const [locationInputValue, setLocationInputValue] = useState("");
+
+  const { ref: locationInputRef } = usePlacesWidget({
+    apiKey: import.meta.env.VITE_GOOGLE_PLACES_API_KEY || "",
+    onPlaceSelected: (place: any) => {
+      if (place && place.geometry && place.geometry.location) {
+        const location = place.geometry.location;
+        const lat = typeof location.lat === 'function' ? location.lat() : location.lat;
+        const lng = typeof location.lng === 'function' ? location.lng() : location.lng;
+        
+        setFormData({
+          ...formData,
+          location_name: place.formatted_address || place.name || "",
+          location_lat: lat,
+          location_lng: lng,
+        });
+        
+        setLocationInputValue(place.formatted_address || place.name || "");
+      }
+    },
+    options: {
+      types: ["establishment", "geocode"],
+      fields: ["formatted_address", "geometry", "name"],
+    },
+  });
 
   useEffect(() => {
     checkAuth();
@@ -289,6 +315,7 @@ const Groups = () => {
         max_participants: 10,
         visibility: "public",
       });
+      setLocationInputValue("");
     } catch (error) {
       console.error("Error creating group:", error);
       toast({
@@ -518,38 +545,32 @@ const Groups = () => {
                 <div>
                   <Label htmlFor="location_name">Location *</Label>
                   <Input
+                    ref={locationInputRef}
                     id="location_name"
-                    value={formData.location_name}
-                    onChange={(e) => setFormData({ ...formData, location_name: e.target.value })}
-                    placeholder="Central Park, NYC"
+                    value={locationInputValue}
+                    onChange={(e) => {
+                      setLocationInputValue(e.target.value);
+                      setFormData({ ...formData, location_name: e.target.value });
+                    }}
+                    placeholder="Search for a location..."
                     required
                   />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Start typing to see location suggestions
+                  </p>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="location_lat">Latitude *</Label>
-                    <Input
-                      id="location_lat"
-                      type="number"
-                      step="any"
-                      value={formData.location_lat}
-                      onChange={(e) => setFormData({ ...formData, location_lat: parseFloat(e.target.value) })}
-                      required
-                    />
+                {formData.location_lat !== 0 && formData.location_lng !== 0 && (
+                  <div className="text-xs text-muted-foreground bg-muted p-3 rounded-md flex items-start gap-2">
+                    <MapPin className="h-4 w-4 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <div className="font-medium">Coordinates detected</div>
+                      <div className="mt-0.5">
+                        {formData.location_lat.toFixed(6)}, {formData.location_lng.toFixed(6)}
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <Label htmlFor="location_lng">Longitude *</Label>
-                    <Input
-                      id="location_lng"
-                      type="number"
-                      step="any"
-                      value={formData.location_lng}
-                      onChange={(e) => setFormData({ ...formData, location_lng: parseFloat(e.target.value) })}
-                      required
-                    />
-                  </div>
-                </div>
+                )}
 
                 <div>
                   <Label htmlFor="scheduled_time">Scheduled Time *</Label>
