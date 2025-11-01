@@ -15,7 +15,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { z } from "zod";
 import { toZonedTime, fromZonedTime } from 'date-fns-tz';
 import { addHours } from 'date-fns';
-import { usePlacesWidget } from "react-google-autocomplete";
+
 
 const createGroupSchema = (locationTimezone: string) => z.object({
   title: z.string().min(3, "Title must be at least 3 characters").max(100, "Title too long"),
@@ -91,30 +91,56 @@ const Groups = () => {
   const [locationTimezone, setLocationTimezone] = useState<string>("UTC");
   const [fetchingTimezone, setFetchingTimezone] = useState(false);
   const [locationInputValue, setLocationInputValue] = useState("");
+  const [locationSuggestions, setLocationSuggestions] = useState<any[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
 
-  const { ref: locationInputRef } = usePlacesWidget({
-    apiKey: import.meta.env.VITE_GOOGLE_PLACES_API_KEY || "",
-    onPlaceSelected: (place: any) => {
-      if (place && place.geometry && place.geometry.location) {
-        const location = place.geometry.location;
-        const lat = typeof location.lat === 'function' ? location.lat() : location.lat;
-        const lng = typeof location.lng === 'function' ? location.lng() : location.lng;
-        
-        setFormData({
-          ...formData,
-          location_name: place.formatted_address || place.name || "",
-          location_lat: lat,
-          location_lng: lng,
-        });
-        
-        setLocationInputValue(place.formatted_address || place.name || "");
+  // Debounced search for location suggestions
+  useEffect(() => {
+    if (locationInputValue.length < 3) {
+      setLocationSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setLoadingSuggestions(true);
+      try {
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
+            locationInputValue
+          )}&format=json&addressdetails=1&limit=5`,
+          {
+            headers: {
+              'User-Agent': 'FitnessBuddyApp/1.0'
+            }
+          }
+        );
+        const data = await response.json();
+        setLocationSuggestions(data);
+        setShowSuggestions(true);
+      } catch (error) {
+        console.error("Error fetching location suggestions:", error);
+        setLocationSuggestions([]);
+      } finally {
+        setLoadingSuggestions(false);
       }
-    },
-    options: {
-      types: ["establishment", "geocode"],
-      fields: ["formatted_address", "geometry", "name"],
-    },
-  });
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [locationInputValue]);
+
+  const handleLocationSelect = (place: any) => {
+    setFormData({
+      ...formData,
+      location_name: place.display_name,
+      location_lat: parseFloat(place.lat),
+      location_lng: parseFloat(place.lon),
+    });
+    setLocationInputValue(place.display_name);
+    setShowSuggestions(false);
+    setLocationSuggestions([]);
+  };
 
   useEffect(() => {
     checkAuth();
@@ -542,22 +568,41 @@ const Groups = () => {
                   </Select>
                 </div>
 
-                <div>
+                <div className="relative">
                   <Label htmlFor="location_name">Location *</Label>
                   <Input
-                    ref={locationInputRef}
                     id="location_name"
                     value={locationInputValue}
                     onChange={(e) => {
                       setLocationInputValue(e.target.value);
                       setFormData({ ...formData, location_name: e.target.value });
                     }}
+                    onFocus={() => locationSuggestions.length > 0 && setShowSuggestions(true)}
                     placeholder="Search for a location..."
                     required
+                    autoComplete="off"
                   />
                   <p className="text-xs text-muted-foreground mt-1">
-                    Start typing to see location suggestions
+                    {loadingSuggestions ? "Searching..." : "Start typing to see location suggestions (min 3 characters)"}
                   </p>
+                  
+                  {showSuggestions && locationSuggestions.length > 0 && (
+                    <div className="absolute z-50 w-full mt-1 bg-background border border-border rounded-md shadow-lg max-h-60 overflow-auto">
+                      {locationSuggestions.map((place, index) => (
+                        <button
+                          key={index}
+                          type="button"
+                          className="w-full text-left px-4 py-3 hover:bg-accent hover:text-accent-foreground transition-colors border-b border-border last:border-b-0 text-sm"
+                          onClick={() => handleLocationSelect(place)}
+                        >
+                          <div className="flex items-start gap-2">
+                            <MapPin className="h-4 w-4 flex-shrink-0 mt-0.5 text-muted-foreground" />
+                            <span className="line-clamp-2">{place.display_name}</span>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {formData.location_lat !== 0 && formData.location_lng !== 0 && (
