@@ -1,13 +1,13 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Activity, Users, Calendar, TrendingUp } from "lucide-react";
-import sketchRunning from "@/assets/sketch-running.png";
-import sketchYoga from "@/assets/sketch-yoga.png";
-import sketchGym from "@/assets/sketch-gym.png";
-import sketchExercise from "@/assets/sketch-exercise.png";
-import sketchCricket from "@/assets/sketch-cricket.png";
-import sketchFootball from "@/assets/sketch-football.png";
-import sketchBasketball from "@/assets/sketch-basketball.png";
+import fitJogging from "@/assets/fit-jogging.png";
+import fitYoga from "@/assets/fit-yoga.png";
+import fitGym from "@/assets/fit-gym.png";
+import fitExercise from "@/assets/fit-exercise.png";
+import fitCricket from "@/assets/fit-cricket.png";
+import fitFootball from "@/assets/fit-football.png";
+import fitBasketball from "@/assets/fit-basketball.png";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -68,13 +68,13 @@ const Index = () => {
             <h2 className="text-3xl font-bold mb-8">Popular Activities</h2>
             <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-6">
               {[
-                { name: "Jogging & Stretching", icon: sketchRunning },
-                { name: "Yoga", icon: sketchYoga },
-                { name: "Gym", icon: sketchGym },
-                { name: "Exercise", icon: sketchExercise },
-                { name: "Cricket", icon: sketchCricket },
-                { name: "Football", icon: sketchFootball },
-                { name: "Basketball", icon: sketchBasketball }
+                { name: "Jogging & Stretching", icon: fitJogging },
+                { name: "Yoga", icon: fitYoga },
+                { name: "Gym", icon: fitGym },
+                { name: "Exercise", icon: fitExercise },
+                { name: "Cricket", icon: fitCricket },
+                { name: "Football", icon: fitFootball },
+                { name: "Basketball", icon: fitBasketball }
               ].map((activity) => (
                 <div 
                   key={activity.name}
@@ -83,7 +83,7 @@ const Index = () => {
                   <img 
                     src={activity.icon} 
                     alt={activity.name}
-                    className="w-16 h-16 object-contain"
+                    className="w-16 h-16 object-contain transition-transform hover:scale-110 drop-shadow-lg"
                   />
                   <span className="text-sm font-medium">{activity.name}</span>
                 </div>
