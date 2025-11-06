@@ -68,7 +68,7 @@ const Index = () => {
             <h2 className="text-3xl font-bold mb-8">Popular Activities</h2>
             <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-6">
               {[
-                { name: "Running", icon: sketchRunning },
+                { name: "Jogging & Stretching", icon: sketchRunning },
                 { name: "Yoga", icon: sketchYoga },
                 { name: "Gym", icon: sketchGym },
                 { name: "Exercise", icon: sketchExercise },
