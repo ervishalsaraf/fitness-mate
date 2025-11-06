@@ -137,18 +137,18 @@ const Profile = () => {
   };
 
   const shareViaWhatsApp = () => {
-    const message = `Join me on Activity Buddy! Let's work out together 💪 ${getReferralLink()}`;
+    const message = `Join me on Fit Connect24! Let's work out together 💪 ${getReferralLink()}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, "_blank");
   };
 
   const shareViaEmail = () => {
-    const subject = "Join me on Activity Buddy!";
-    const body = `Hey! I'm using Activity Buddy to find fitness buddies and track my activities. Join me using this link: ${getReferralLink()}`;
+    const subject = "Join me on Fit Connect24!";
+    const body = `Hey! I'm using Fit Connect24 to find fitness buddies and track my activities. Join me using this link: ${getReferralLink()}`;
     window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   };
 
   const shareViaSMS = () => {
-    const message = `Join me on Activity Buddy! ${getReferralLink()}`;
+    const message = `Join me on Fit Connect24! ${getReferralLink()}`;
     window.location.href = `sms:?body=${encodeURIComponent(message)}`;
   };
 
@@ -156,8 +156,8 @@ const Profile = () => {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: "Join Activity Buddy",
-          text: "Join me on Activity Buddy! Let's work out together 💪",
+          title: "Join Fit Connect24",
+          text: "Join me on Fit Connect24! Let's work out together 💪",
           url: getReferralLink(),
         });
       } catch (err) {
@@ -264,7 +264,7 @@ const Profile = () => {
               <CardTitle>Invite Friends</CardTitle>
             </div>
             <CardDescription>
-              Share Activity Buddy with friends and grow your fitness community
+              Share Fit Connect24 with friends and grow your fitness community
               {referralStats.count > 0 && ` · ${referralStats.count} friend${referralStats.count > 1 ? 's' : ''} invited`}
             </CardDescription>
           </CardHeader>

@@ -488,8 +488,8 @@ const Groups = () => {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `Join Activity Buddy & ${groupTitle}`,
-          text: `Join me on Activity Buddy and come to ${groupTitle}! 💪`,
+          title: `Join Fit Connect24 & ${groupTitle}`,
+          text: `Join me on Fit Connect24 and come to ${groupTitle}! 💪`,
           url: combinedUrl,
         });
       } catch (error) {
@@ -508,7 +508,7 @@ const Groups = () => {
     const combinedUrl = await getReferralEventLink(inviteCode);
     if (!combinedUrl) return;
     
-    const text = `Join me on Activity Buddy and come to ${groupTitle}! 💪`;
+    const text = `Join me on Fit Connect24 and come to ${groupTitle}! 💪`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text + ' ' + combinedUrl)}`, '_blank');
   };
 
@@ -516,7 +516,7 @@ const Groups = () => {
     const combinedUrl = await getReferralEventLink(inviteCode);
     if (!combinedUrl) return;
     
-    const text = `Join me on Activity Buddy and come to ${groupTitle}! ${combinedUrl}`;
+    const text = `Join me on Fit Connect24 and come to ${groupTitle}! ${combinedUrl}`;
     window.location.href = `sms:?body=${encodeURIComponent(text)}`;
   };
 

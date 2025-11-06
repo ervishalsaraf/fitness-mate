@@ -22,9 +22,9 @@ const Index = () => {
             </div>
           </div>
           
-          <h1 className="text-5xl md:text-6xl font-bold">Activity Buddy</h1>
+          <h1 className="text-5xl md:text-6xl font-bold">Fit Connect24</h1>
           <p className="text-xl md:text-2xl text-white/90">
-            Find your perfect fitness companion and stay motivated together
+            Connect with fitness partners anytime, anywhere - your 24/7 fitness community
           </p>
 
           <div className="grid md:grid-cols-3 gap-6 mt-12">

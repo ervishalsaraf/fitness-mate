@@ -337,7 +337,7 @@ const Auth = () => {
               <Activity className="h-8 w-8 text-white" />
             </div>
           </div>
-          <CardTitle className="text-3xl font-bold">Activity Buddy</CardTitle>
+          <CardTitle className="text-3xl font-bold">Fit Connect24</CardTitle>
           <CardDescription className="space-y-2">
             <div>
               {referrerName 
