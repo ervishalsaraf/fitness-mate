@@ -8,6 +8,9 @@ import fitExercise from "@/assets/fit-exercise.png";
 import fitCricket from "@/assets/fit-cricket.png";
 import fitFootball from "@/assets/fit-football.png";
 import fitBasketball from "@/assets/fit-basketball.png";
+import fitBadminton from "@/assets/fit-badminton.png";
+import fitVolleyball from "@/assets/fit-volleyball.png";
+import fitSnooker from "@/assets/fit-snooker.png";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -66,7 +69,7 @@ const Index = () => {
           
           <div className="mt-16">
             <h2 className="text-3xl font-bold mb-8">Popular Activities</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-6">
               {[
                 { name: "Jogging & Stretching", icon: fitJogging },
                 { name: "Yoga", icon: fitYoga },
@@ -74,7 +77,10 @@ const Index = () => {
                 { name: "Exercise", icon: fitExercise },
                 { name: "Cricket", icon: fitCricket },
                 { name: "Football", icon: fitFootball },
-                { name: "Basketball", icon: fitBasketball }
+                { name: "Basketball", icon: fitBasketball },
+                { name: "Badminton", icon: fitBadminton },
+                { name: "Volleyball", icon: fitVolleyball },
+                { name: "Snooker", icon: fitSnooker }
               ].map((activity) => (
                 <div 
                   key={activity.name}
