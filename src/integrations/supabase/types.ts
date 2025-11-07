@@ -724,6 +724,9 @@ export type Database = {
         | "running"
         | "hiking"
         | "exercise"
+        | "badminton"
+        | "volleyball"
+        | "snooker"
       app_role: "admin" | "user"
       event_visibility: "public" | "private"
       gender: "male" | "female" | "other" | "prefer_not_to_say"
@@ -870,6 +873,9 @@ export const Constants = {
         "running",
         "hiking",
         "exercise",
+        "badminton",
+        "volleyball",
+        "snooker",
       ],
       app_role: ["admin", "user"],
       event_visibility: ["public", "private"],

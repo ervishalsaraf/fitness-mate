@@ -73,6 +73,28 @@ interface Group {
   is_member: boolean;
 }
 
+// Activity categories for filtering
+const activityCategories = {
+  all: {
+    name: "All Activities",
+    activities: [] as string[], // Empty array means show all
+  },
+  "team-sports": {
+    name: "Team Sports",
+    activities: ["cricket", "football", "basketball", "volleyball"] as string[],
+  },
+  "racket-sports": {
+    name: "Racket Sports",
+    activities: ["badminton", "snooker"] as string[],
+  },
+  "individual-fitness": {
+    name: "Individual Fitness",
+    activities: ["running", "cycling", "gym", "swimming", "yoga", "hiking"] as string[],
+  },
+};
+
+type CategoryKey = keyof typeof activityCategories;
+
 const Groups = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -82,6 +104,7 @@ const Groups = () => {
   const [loading, setLoading] = useState(true);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<CategoryKey>("all");
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -586,6 +609,9 @@ const Groups = () => {
                       <SelectItem value="cricket">Cricket</SelectItem>
                       <SelectItem value="football">Football</SelectItem>
                       <SelectItem value="basketball">Basketball</SelectItem>
+                      <SelectItem value="badminton">Badminton</SelectItem>
+                      <SelectItem value="volleyball">Volleyball</SelectItem>
+                      <SelectItem value="snooker">Snooker</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -743,21 +769,62 @@ const Groups = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8">
+        {/* Category Filter */}
+        <div className="mb-8">
+          <h2 className="text-lg font-semibold mb-4">Filter by Category</h2>
+          <div className="flex flex-wrap gap-2">
+            {(Object.keys(activityCategories) as CategoryKey[]).map((categoryKey) => {
+              const category = activityCategories[categoryKey];
+              const isActive = selectedCategory === categoryKey;
+              
+              return (
+                <Button
+                  key={categoryKey}
+                  variant={isActive ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setSelectedCategory(categoryKey)}
+                  className="transition-all"
+                >
+                  {category.name}
+                </Button>
+              );
+            })}
+          </div>
+        </div>
+
         {loading ? (
           <div className="text-center py-12 text-muted-foreground">Loading events...</div>
-        ) : groups.length === 0 ? (
-          <Card>
-            <CardContent className="text-center py-12 space-y-4">
-              <Calendar className="h-12 w-12 mx-auto text-muted-foreground" />
-              <div>
-                <p className="text-muted-foreground">No events found</p>
-                <p className="text-sm text-muted-foreground">Create your first event to get started</p>
-              </div>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {groups.map((group) => (
+        ) : (() => {
+          // Filter groups based on selected category
+          const filteredGroups = selectedCategory === "all" 
+            ? groups 
+            : groups.filter(group => 
+                activityCategories[selectedCategory].activities.includes(group.activity_type)
+              );
+          
+          return filteredGroups.length === 0 ? (
+            <Card>
+              <CardContent className="text-center py-12 space-y-4">
+                <Calendar className="h-12 w-12 mx-auto text-muted-foreground" />
+                <div>
+                  <p className="text-muted-foreground">
+                    {selectedCategory === "all" 
+                      ? "No events found" 
+                      : `No ${activityCategories[selectedCategory].name.toLowerCase()} events found`
+                    }
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {selectedCategory === "all" 
+                      ? "Create your first event to get started" 
+                      : "Try selecting a different category or create a new event"
+                    }
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {filteredGroups.map((group) => (
               <Card key={group.id} className="hover:shadow-lg transition-shadow">
                 <CardHeader>
                   <div className="flex justify-between items-start">
@@ -880,9 +947,11 @@ const Groups = () => {
                   )}
                 </CardContent>
               </Card>
-            ))}
-          </div>
-        )}
+                ))}
+              </div>
+            );
+          })()
+        }
       </main>
     </div>
   );

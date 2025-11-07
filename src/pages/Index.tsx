@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Activity, Users, Calendar, TrendingUp } from "lucide-react";
 import fitJogging from "@/assets/fit-jogging.png";
 import fitYoga from "@/assets/fit-yoga.png";
@@ -11,6 +12,19 @@ import fitBasketball from "@/assets/fit-basketball.png";
 import fitBadminton from "@/assets/fit-badminton.png";
 import fitVolleyball from "@/assets/fit-volleyball.png";
 import fitSnooker from "@/assets/fit-snooker.png";
+
+const activityData = [
+  { name: "Jogging & Stretching", icon: fitJogging, category: "Individual Fitness", categoryColor: "bg-green-500/10 text-green-700 border-green-500/20" },
+  { name: "Yoga", icon: fitYoga, category: "Individual Fitness", categoryColor: "bg-green-500/10 text-green-700 border-green-500/20" },
+  { name: "Gym", icon: fitGym, category: "Individual Fitness", categoryColor: "bg-green-500/10 text-green-700 border-green-500/20" },
+  { name: "Exercise", icon: fitExercise, category: "Individual Fitness", categoryColor: "bg-green-500/10 text-green-700 border-green-500/20" },
+  { name: "Cricket", icon: fitCricket, category: "Team Sports", categoryColor: "bg-blue-500/10 text-blue-700 border-blue-500/20" },
+  { name: "Football", icon: fitFootball, category: "Team Sports", categoryColor: "bg-blue-500/10 text-blue-700 border-blue-500/20" },
+  { name: "Basketball", icon: fitBasketball, category: "Team Sports", categoryColor: "bg-blue-500/10 text-blue-700 border-blue-500/20" },
+  { name: "Badminton", icon: fitBadminton, category: "Racket Sports", categoryColor: "bg-orange-500/10 text-orange-700 border-orange-500/20" },
+  { name: "Volleyball", icon: fitVolleyball, category: "Team Sports", categoryColor: "bg-blue-500/10 text-blue-700 border-blue-500/20" },
+  { name: "Snooker", icon: fitSnooker, category: "Racket Sports", categoryColor: "bg-orange-500/10 text-orange-700 border-orange-500/20" },
+];
 
 const Index = () => {
   const navigate = useNavigate();
@@ -70,18 +84,7 @@ const Index = () => {
           <div className="mt-16">
             <h2 className="text-3xl font-bold mb-8">Popular Activities</h2>
             <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-6">
-              {[
-                { name: "Jogging & Stretching", icon: fitJogging },
-                { name: "Yoga", icon: fitYoga },
-                { name: "Gym", icon: fitGym },
-                { name: "Exercise", icon: fitExercise },
-                { name: "Cricket", icon: fitCricket },
-                { name: "Football", icon: fitFootball },
-                { name: "Basketball", icon: fitBasketball },
-                { name: "Badminton", icon: fitBadminton },
-                { name: "Volleyball", icon: fitVolleyball },
-                { name: "Snooker", icon: fitSnooker }
-              ].map((activity) => (
+              {activityData.map((activity) => (
                 <div 
                   key={activity.name}
                   className="flex flex-col items-center gap-3 p-4 bg-white/10 backdrop-blur-sm rounded-xl hover:bg-white/20 transition-all hover:scale-105"
@@ -91,7 +94,13 @@ const Index = () => {
                     alt={activity.name}
                     className="w-16 h-16 object-contain transition-transform hover:scale-110 drop-shadow-lg"
                   />
-                  <span className="text-sm font-medium">{activity.name}</span>
+                  <span className="text-sm font-medium text-center">{activity.name}</span>
+                  <Badge 
+                    variant="outline" 
+                    className={`text-xs ${activity.categoryColor} border`}
+                  >
+                    {activity.category}
+                  </Badge>
                 </div>
               ))}
             </div>
