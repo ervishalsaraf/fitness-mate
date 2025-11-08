@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Activity, Users, Calendar, TrendingUp } from "lucide-react";
+import { Activity, Users, Calendar, TrendingUp, Zap } from "lucide-react";
 import fitJogging from "@/assets/fit-jogging.png";
 import fitYoga from "@/assets/fit-yoga.png";
 import fitGym from "@/assets/fit-gym.png";
@@ -70,6 +70,15 @@ const Index = () => {
               onClick={() => navigate("/auth")}
             >
               Get Started
+            </Button>
+            <Button 
+              size="lg" 
+              variant="outline"
+              className="text-lg px-8 bg-white/10 backdrop-blur-sm border-white/30 text-white hover:bg-white/20 shadow-xl hover:scale-105 transition-transform"
+              onClick={() => navigate("/pricing")}
+            >
+              <Zap className="mr-2 h-5 w-5" />
+              View Pricing
             </Button>
             <Button 
               size="lg" 

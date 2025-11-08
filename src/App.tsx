@@ -11,6 +11,7 @@ import Profile from "./pages/Profile";
 import Groups from "./pages/Groups";
 import Messages from "./pages/Messages";
 import Subscription from "./pages/Subscription";
+import Pricing from "./pages/Pricing";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,6 +32,7 @@ const App = () => (
           <Route path="/messages" element={<Messages />} />
           <Route path="/messages/:conversationId" element={<Messages />} />
           <Route path="/subscription" element={<Subscription />} />
+          <Route path="/pricing" element={<Pricing />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
