@@ -17,6 +17,7 @@ import { z } from "zod";
 import { toZonedTime, fromZonedTime } from 'date-fns-tz';
 import { addHours } from 'date-fns';
 import EventComments from "@/components/EventComments";
+import UpgradePrompt from "@/components/UpgradePrompt";
 
 
 const createGroupSchema = (locationTimezone: string) => z.object({
@@ -105,6 +106,9 @@ const Groups = () => {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<CategoryKey>("all");
+  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
+  const [eventCount, setEventCount] = useState(0);
+  const [subscriptionTier, setSubscriptionTier] = useState<string>("free");
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -325,6 +329,10 @@ const Groups = () => {
   const handleCreateGroup = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Check event creation limit for free users
+    const canCreate = await checkEventLimit();
+    if (!canCreate) return;
+
     const result = createGroupSchema(locationTimezone).safeParse(formData);
     if (!result.success) {
       toast({
@@ -362,6 +370,11 @@ const Groups = () => {
         .from("group_members")
         .insert({ group_id: data.id, user_id: user.id });
 
+      // Track event creation for free users
+      if (subscriptionTier === 'free') {
+        await incrementEventCount(data.id);
+      }
+
       toast({
         title: "Group created!",
         description: formData.visibility === "private" 
@@ -395,6 +408,62 @@ const Groups = () => {
         variant: "destructive",
       });
     }
+  };
+
+  const checkEventLimit = async (): Promise<boolean> => {
+    try {
+      // Check subscription tier
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return false;
+
+      const { data: subData } = await supabase.functions.invoke('check-subscription', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      const tier = subData?.tier || 'free';
+      setSubscriptionTier(tier);
+
+      // Premium and Elite users have unlimited event creation
+      if (tier === 'premium' || tier === 'elite') {
+        return true;
+      }
+
+      // Check this month's event count for free users
+      const now = new Date();
+      const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      
+      const { data: limitData, error } = await supabase
+        .from('user_event_limits')
+        .select('id')
+        .eq('user_id', user.id)
+        .gte('joined_at', firstDayOfMonth.toISOString());
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error checking event limit:', error);
+        return true; // Allow on error
+      }
+
+      const currentCount = limitData?.length || 0;
+      setEventCount(currentCount);
+
+      if (currentCount >= 2) {
+        setShowUpgradePrompt(true);
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error checking event limit:', error);
+      return true; // Allow on error
+    }
+  };
+
+  const incrementEventCount = async (groupId: string) => {
+    await supabase
+      .from('user_event_limits')
+      .insert({ user_id: user.id, group_id: groupId });
   };
 
   const handleJoinGroup = async (groupId: string) => {
@@ -953,6 +1022,16 @@ const Groups = () => {
           })()
         }
       </main>
+
+      <UpgradePrompt
+        open={showUpgradePrompt}
+        onOpenChange={setShowUpgradePrompt}
+        title="Monthly Event Limit Reached"
+        description="You've reached your monthly limit of 2 events. Upgrade to Premium for unlimited event creation!"
+        feature="events"
+        currentUsage={eventCount}
+        limit={2}
+      />
     </div>
   );
 };

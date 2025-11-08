@@ -189,7 +189,7 @@ const ChatView = ({ conversationId, currentUserId }: ChatViewProps) => {
         <div ref={messagesEndRef} />
       </div>
 
-      <MessageInput onSendMessage={handleSendMessage} />
+      <MessageInput onSendMessage={handleSendMessage} currentUserId={currentUserId} />
     </div>
   );
 };
