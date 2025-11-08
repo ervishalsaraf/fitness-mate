@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { MapPin, Calendar, Users, TrendingUp, LogOut, User as UserIcon, Plus } from "lucide-react";
+import { MapPin, Calendar, Users, TrendingUp, LogOut, User as UserIcon, Plus, Crown, Zap } from "lucide-react";
 
 interface Profile {
   id: string;
@@ -24,6 +24,8 @@ const Dashboard = () => {
   const [user, setUser] = useState<any>(null);
   const [nearbyBuddies, setNearbyBuddies] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [subscriptionTier, setSubscriptionTier] = useState<string>("free");
+  const [checkingSubscription, setCheckingSubscription] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -34,6 +36,7 @@ const Dashboard = () => {
       }
       setUser(session.user);
       loadNearbyBuddies();
+      checkSubscription();
     };
 
     checkAuth();
@@ -43,11 +46,39 @@ const Dashboard = () => {
         navigate("/auth");
       } else if (session) {
         setUser(session.user);
+        checkSubscription();
       }
     });
 
     return () => subscription.unsubscribe();
   }, [navigate]);
+
+  const checkSubscription = async () => {
+    setCheckingSubscription(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const { data, error } = await supabase.functions.invoke('check-subscription', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (error) {
+        console.error("Error checking subscription:", error);
+        return;
+      }
+
+      if (data?.tier) {
+        setSubscriptionTier(data.tier);
+      }
+    } catch (error) {
+      console.error("Error checking subscription:", error);
+    } finally {
+      setCheckingSubscription(false);
+    }
+  };
 
   const loadNearbyBuddies = async () => {
     if (!user) return;
@@ -162,7 +193,32 @@ const Dashboard = () => {
           <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
             Fit Connect24
           </h1>
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2">
+            {subscriptionTier !== "free" && (
+              <Badge 
+                variant={subscriptionTier === "elite" ? "default" : "secondary"}
+                className="cursor-pointer hover:opacity-80 transition-opacity"
+                onClick={() => navigate("/subscription")}
+              >
+                {subscriptionTier === "elite" ? (
+                  <Crown className="h-3 w-3 mr-1" />
+                ) : (
+                  <Zap className="h-3 w-3 mr-1" />
+                )}
+                {subscriptionTier.toUpperCase()}
+              </Badge>
+            )}
+            {subscriptionTier === "free" && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => navigate("/pricing")}
+                className="text-xs"
+              >
+                <Zap className="h-3 w-3 mr-1" />
+                Upgrade
+              </Button>
+            )}
             <Button variant="ghost" size="icon" onClick={() => navigate("/profile")}>
               <UserIcon className="h-5 w-5" />
             </Button>
