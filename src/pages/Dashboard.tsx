@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { MapPin, Calendar, Users, TrendingUp, LogOut, User as UserIcon, Plus, Crown, Zap } from "lucide-react";
+import { MapPin, Calendar, Users, TrendingUp, LogOut, User as UserIcon, Plus, Crown, Zap, Filter, Sparkles, Lock, ChevronDown, ChevronUp } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Slider } from "@/components/ui/slider";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import UpgradePrompt from "@/components/UpgradePrompt";
 
 interface Profile {
   id: string;
@@ -26,6 +30,16 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [subscriptionTier, setSubscriptionTier] = useState<string>("free");
   const [checkingSubscription, setCheckingSubscription] = useState(false);
+  
+  // Filter state
+  const [showFilters, setShowFilters] = useState(false);
+  const [selectedActivity, setSelectedActivity] = useState<string>("all");
+  const [maxDistance, setMaxDistance] = useState<number>(10);
+  const [selectedSkillLevel, setSelectedSkillLevel] = useState<string>("all");
+  
+  // Upgrade prompt state
+  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
+  const [upgradeFeature, setUpgradeFeature] = useState<"filters" | "tracking">("filters");
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -186,6 +200,53 @@ const Dashboard = () => {
     navigate("/groups");
   };
 
+  const handleAdvancedFilterClick = () => {
+    if (subscriptionTier === "free") {
+      setUpgradeFeature("filters");
+      setShowUpgradePrompt(true);
+    }
+  };
+
+  const handleAISuggestionsClick = () => {
+    if (subscriptionTier === "free") {
+      setUpgradeFeature("tracking");
+      setShowUpgradePrompt(true);
+    } else {
+      toast({
+        title: "AI Suggestions",
+        description: "AI match suggestions coming soon for premium users!",
+      });
+    }
+  };
+
+  // Filter buddies based on selected filters
+  const filteredBuddies = useMemo(() => {
+    return nearbyBuddies.filter(buddy => {
+      // Activity filter
+      if (selectedActivity !== "all" && !buddy.activities.includes(selectedActivity)) {
+        return false;
+      }
+      
+      // Distance filter
+      if (buddy.distance && buddy.distance > maxDistance) {
+        return false;
+      }
+      
+      // Skill level filter (premium only)
+      if (subscriptionTier !== "free" && selectedSkillLevel !== "all" && buddy.skill_level !== selectedSkillLevel) {
+        return false;
+      }
+      
+      return true;
+    });
+  }, [nearbyBuddies, selectedActivity, maxDistance, selectedSkillLevel, subscriptionTier]);
+
+  const activeFilterCount = [
+    selectedActivity !== "all",
+    maxDistance < 10,
+    subscriptionTier !== "free" && selectedSkillLevel !== "all",
+  ].filter(Boolean).length;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
       <header className="border-b bg-card/80 backdrop-blur-sm sticky top-0 z-10 shadow-sm">
@@ -259,19 +320,226 @@ const Dashboard = () => {
           </TabsList>
 
           <TabsContent value="buddies" className="space-y-4">
+            {/* AI Suggestions Card */}
+            <Card className={subscriptionTier === "free" ? "border-muted-foreground/20 bg-muted/20" : "border-primary/20 bg-gradient-to-br from-primary/5 to-secondary/5"}>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className={`p-3 rounded-full ${subscriptionTier === "free" ? "bg-muted" : "bg-gradient-to-br from-primary to-secondary"}`}>
+                      <Sparkles className={`h-5 w-5 ${subscriptionTier === "free" ? "text-muted-foreground" : "text-white"}`} />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold flex items-center gap-2">
+                        AI Match Suggestions
+                        {subscriptionTier === "free" && <Lock className="h-4 w-4 text-muted-foreground" />}
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        {subscriptionTier === "free" 
+                          ? "Get personalized buddy recommendations powered by AI"
+                          : "Your best matches based on compatibility"}
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    onClick={handleAISuggestionsClick}
+                    variant={subscriptionTier === "free" ? "outline" : "default"}
+                    size="sm"
+                  >
+                    {subscriptionTier === "free" ? (
+                      <>
+                        <Lock className="h-4 w-4 mr-2" />
+                        Unlock
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="h-4 w-4 mr-2" />
+                        View Matches
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Filters Section */}
             <Card>
-              <CardHeader>
-                <CardTitle>Nearby Activity Buddies</CardTitle>
-                <CardDescription>Find people with similar interests near you</CardDescription>
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Nearby Activity Buddies</CardTitle>
+                    <CardDescription>Find people with similar interests near you</CardDescription>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowFilters(!showFilters)}
+                    className="gap-2"
+                  >
+                    <Filter className="h-4 w-4" />
+                    Filters
+                    {activeFilterCount > 0 && (
+                      <Badge variant="secondary" className="ml-1 h-5 w-5 rounded-full p-0 flex items-center justify-center">
+                        {activeFilterCount}
+                      </Badge>
+                    )}
+                    {showFilters ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                  </Button>
+                </div>
               </CardHeader>
+
+              <Collapsible open={showFilters}>
+                <CollapsibleContent>
+                  <CardContent className="border-t pt-4 pb-4 space-y-4">
+                    <div className="grid gap-4 md:grid-cols-2">
+                      {/* Basic Filter: Activity */}
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Activity Type</label>
+                        <Select value={selectedActivity} onValueChange={setSelectedActivity}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="All activities" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All activities</SelectItem>
+                            <SelectItem value="running">Running</SelectItem>
+                            <SelectItem value="cycling">Cycling</SelectItem>
+                            <SelectItem value="gym">Gym</SelectItem>
+                            <SelectItem value="yoga">Yoga</SelectItem>
+                            <SelectItem value="swimming">Swimming</SelectItem>
+                            <SelectItem value="basketball">Basketball</SelectItem>
+                            <SelectItem value="football">Football</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Basic Filter: Distance */}
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">
+                          Max Distance: {maxDistance} km
+                        </label>
+                        <Slider
+                          value={[maxDistance]}
+                          onValueChange={(value) => setMaxDistance(value[0])}
+                          min={1}
+                          max={20}
+                          step={1}
+                          className="w-full"
+                        />
+                      </div>
+
+                      {/* Advanced Filter: Skill Level (Premium) */}
+                      <div className="space-y-2 relative">
+                        <label className="text-sm font-medium flex items-center gap-2">
+                          Skill Level Match
+                          {subscriptionTier === "free" && (
+                            <Badge variant="secondary" className="text-xs">
+                              <Crown className="h-3 w-3 mr-1" />
+                              Premium
+                            </Badge>
+                          )}
+                        </label>
+                        <div className="relative">
+                          <Select
+                            value={selectedSkillLevel}
+                            onValueChange={(value) => {
+                              if (subscriptionTier === "free") {
+                                handleAdvancedFilterClick();
+                              } else {
+                                setSelectedSkillLevel(value);
+                              }
+                            }}
+                            disabled={subscriptionTier === "free"}
+                          >
+                            <SelectTrigger className={subscriptionTier === "free" ? "opacity-50" : ""}>
+                              <SelectValue placeholder="All skill levels" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">All skill levels</SelectItem>
+                              <SelectItem value="beginner">Beginner</SelectItem>
+                              <SelectItem value="intermediate">Intermediate</SelectItem>
+                              <SelectItem value="advanced">Advanced</SelectItem>
+                              <SelectItem value="expert">Expert</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          {subscriptionTier === "free" && (
+                            <div
+                              className="absolute inset-0 cursor-pointer flex items-center justify-center"
+                              onClick={handleAdvancedFilterClick}
+                            >
+                              <Lock className="h-5 w-5 text-muted-foreground" />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* More Premium Filters Teaser */}
+                      {subscriptionTier === "free" && (
+                        <div
+                          className="space-y-2 cursor-pointer"
+                          onClick={handleAdvancedFilterClick}
+                        >
+                          <label className="text-sm font-medium flex items-center gap-2 text-muted-foreground">
+                            More Advanced Filters
+                            <Badge variant="secondary" className="text-xs">
+                              <Crown className="h-3 w-3 mr-1" />
+                              Premium
+                            </Badge>
+                          </label>
+                          <div className="border-2 border-dashed rounded-lg p-4 bg-muted/20 hover:bg-muted/40 transition-colors">
+                            <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                              <Lock className="h-4 w-4" />
+                              <span>Age range, time slots & more</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {activeFilterCount > 0 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedActivity("all");
+                          setMaxDistance(10);
+                          setSelectedSkillLevel("all");
+                        }}
+                        className="w-full"
+                      >
+                        Clear All Filters
+                      </Button>
+                    )}
+                  </CardContent>
+                </CollapsibleContent>
+              </Collapsible>
+
               <CardContent>
                 {loading ? (
                   <div className="text-center py-8 text-muted-foreground">Loading buddies...</div>
-                ) : nearbyBuddies.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">No buddies found yet</div>
+                ) : filteredBuddies.length === 0 ? (
+                  <div className="text-center py-8 space-y-2">
+                    <p className="text-muted-foreground">
+                      {nearbyBuddies.length === 0 ? "No buddies found yet" : "No buddies match your filters"}
+                    </p>
+                    {activeFilterCount > 0 && (
+                      <Button
+                        variant="link"
+                        onClick={() => {
+                          setSelectedActivity("all");
+                          setMaxDistance(10);
+                          setSelectedSkillLevel("all");
+                        }}
+                      >
+                        Clear filters
+                      </Button>
+                    )}
+                  </div>
                 ) : (
-                  <div className="grid gap-4">
-                    {nearbyBuddies.map((buddy) => (
+                  <div className="space-y-2">
+                    <p className="text-sm text-muted-foreground px-1">
+                      Showing {filteredBuddies.length} of {nearbyBuddies.length} buddies
+                    </p>
+                    <div className="grid gap-4">
+                      {filteredBuddies.map((buddy) => (
                       <Card key={buddy.id} className="hover:shadow-md transition-shadow">
                         <CardContent className="p-4">
                           <div className="flex items-start justify-between">
@@ -311,7 +579,8 @@ const Dashboard = () => {
                           </div>
                         </CardContent>
                       </Card>
-                    ))}
+                      ))}
+                    </div>
                   </div>
                 )}
               </CardContent>
@@ -374,6 +643,22 @@ const Dashboard = () => {
           </TabsContent>
         </Tabs>
       </main>
+
+      {/* Upgrade Prompts */}
+      <UpgradePrompt
+        open={showUpgradePrompt && upgradeFeature === "filters"}
+        onOpenChange={setShowUpgradePrompt}
+        title="Unlock Advanced Filters"
+        description="Find your perfect fitness buddy with precision filtering"
+        feature="filters"
+      />
+      <UpgradePrompt
+        open={showUpgradePrompt && upgradeFeature === "tracking"}
+        onOpenChange={setShowUpgradePrompt}
+        title="Unlock AI Match Suggestions"
+        description="Get personalized buddy recommendations powered by AI"
+        feature="tracking"
+      />
     </div>
   );
 };
