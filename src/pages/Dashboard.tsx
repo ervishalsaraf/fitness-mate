@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { MapPin, Calendar, Users, TrendingUp, LogOut, User as UserIcon, Plus, Crown, Zap, Filter, Sparkles, Lock, ChevronDown, ChevronUp } from "lucide-react";
+import { MapPin, Calendar, Users, TrendingUp, LogOut, User as UserIcon, Plus, Crown, Zap, Filter, Sparkles, Lock, ChevronDown, ChevronUp, Shield } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -41,6 +41,7 @@ const Dashboard = () => {
   // Upgrade prompt state
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
   const [upgradeFeature, setUpgradeFeature] = useState<"filters" | "tracking">("filters");
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -55,6 +56,7 @@ const Dashboard = () => {
     };
 
     checkAuth();
+    checkAdminRole();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_OUT") {
@@ -67,6 +69,24 @@ const Dashboard = () => {
 
     return () => subscription.unsubscribe();
   }, [navigate]);
+
+  const checkAdminRole = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase.rpc('has_role', {
+        _user_id: user.id,
+        _role: 'admin'
+      });
+
+      if (!error && data === true) {
+        setIsAdmin(true);
+      }
+    } catch (error) {
+      console.error("Error checking admin role:", error);
+    }
+  };
 
   const checkSubscription = async () => {
     setCheckingSubscription(true);
@@ -256,6 +276,17 @@ const Dashboard = () => {
             Fit Connect24
           </h1>
           <div className="flex items-center gap-2">
+            {isAdmin && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate("/admin")}
+                className="gap-2"
+              >
+                <Shield className="h-4 w-4 text-amber-600" />
+                Admin
+              </Button>
+            )}
             {subscriptionTier !== "free" && (
               <Badge 
                 variant={subscriptionTier === "elite" ? "default" : "secondary"}
