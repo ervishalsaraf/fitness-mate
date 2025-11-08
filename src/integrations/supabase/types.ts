@@ -480,6 +480,12 @@ export type Database = {
           location_lng: number | null
           referral_code: string | null
           skill_level: Database["public"]["Enums"]["skill_level"] | null
+          stripe_customer_id: string | null
+          stripe_product_id: string | null
+          stripe_subscription_id: string | null
+          subscription_end: string | null
+          subscription_status: string | null
+          subscription_tier: string | null
           updated_at: string | null
         }
         Insert: {
@@ -495,6 +501,12 @@ export type Database = {
           location_lng?: number | null
           referral_code?: string | null
           skill_level?: Database["public"]["Enums"]["skill_level"] | null
+          stripe_customer_id?: string | null
+          stripe_product_id?: string | null
+          stripe_subscription_id?: string | null
+          subscription_end?: string | null
+          subscription_status?: string | null
+          subscription_tier?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -510,6 +522,12 @@ export type Database = {
           location_lng?: number | null
           referral_code?: string | null
           skill_level?: Database["public"]["Enums"]["skill_level"] | null
+          stripe_customer_id?: string | null
+          stripe_product_id?: string | null
+          stripe_subscription_id?: string | null
+          subscription_end?: string | null
+          subscription_status?: string | null
+          subscription_tier?: string | null
           updated_at?: string | null
         }
         Relationships: []
@@ -668,6 +686,56 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_event_limits: {
+        Row: {
+          group_id: string
+          id: string
+          joined_at: string | null
+          user_id: string
+        }
+        Insert: {
+          group_id: string
+          id?: string
+          joined_at?: string | null
+          user_id: string
+        }
+        Update: {
+          group_id?: string
+          id?: string
+          joined_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_event_limits_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_message_limits: {
+        Row: {
+          date: string
+          id: string
+          message_count: number | null
+          user_id: string
+        }
+        Insert: {
+          date?: string
+          id?: string
+          message_count?: number | null
+          user_id: string
+        }
+        Update: {
+          date?: string
+          id?: string
+          message_count?: number | null
+          user_id?: string
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {
