@@ -7,8 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Copy, Share2, Users } from "lucide-react";
+import { ArrowLeft, Copy, Share2, Users, Globe, Lock } from "lucide-react";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -23,6 +24,7 @@ const Profile = () => {
     gender: "",
     skill_level: "",
     bio: "",
+    is_public: false,
   });
 
   useEffect(() => {
@@ -84,6 +86,7 @@ const Profile = () => {
         gender: data.gender || "",
         skill_level: data.skill_level || "",
         bio: data.bio || "",
+        is_public: data.is_public || false,
       });
     }
 
@@ -104,6 +107,7 @@ const Profile = () => {
         gender: (profile.gender as any) || null,
         skill_level: (profile.skill_level as any) || null,
         bio: profile.bio || null,
+        is_public: profile.is_public,
       })
       .eq("id", user.id);
 
@@ -248,6 +252,29 @@ const Profile = () => {
                 value={profile.bio}
                 onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
                 rows={4}
+              />
+            </div>
+
+            <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/20">
+              <div className="flex items-center gap-3">
+                {profile.is_public ? (
+                  <Globe className="h-5 w-5 text-primary" />
+                ) : (
+                  <Lock className="h-5 w-5 text-muted-foreground" />
+                )}
+                <div>
+                  <Label htmlFor="is_public" className="cursor-pointer">
+                    Make Profile Public
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    Allow anyone to find you in search results
+                  </p>
+                </div>
+              </div>
+              <Switch
+                id="is_public"
+                checked={profile.is_public}
+                onCheckedChange={(checked) => setProfile({ ...profile, is_public: checked })}
               />
             </div>
 

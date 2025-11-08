@@ -476,6 +476,7 @@ export type Database = {
           gender: Database["public"]["Enums"]["gender"] | null
           hide_exact_location: boolean | null
           id: string
+          is_public: boolean | null
           location_lat: number | null
           location_lng: number | null
           referral_code: string | null
@@ -497,6 +498,7 @@ export type Database = {
           gender?: Database["public"]["Enums"]["gender"] | null
           hide_exact_location?: boolean | null
           id: string
+          is_public?: boolean | null
           location_lat?: number | null
           location_lng?: number | null
           referral_code?: string | null
@@ -518,6 +520,7 @@ export type Database = {
           gender?: Database["public"]["Enums"]["gender"] | null
           hide_exact_location?: boolean | null
           id?: string
+          is_public?: boolean | null
           location_lat?: number | null
           location_lng?: number | null
           referral_code?: string | null

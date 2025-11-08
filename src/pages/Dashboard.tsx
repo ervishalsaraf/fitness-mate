@@ -12,6 +12,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import UpgradePrompt from "@/components/UpgradePrompt";
+import BuddySearch from "@/components/BuddySearch";
 
 interface Profile {
   id: string;
@@ -320,6 +321,12 @@ const Dashboard = () => {
           </TabsList>
 
           <TabsContent value="buddies" className="space-y-4">
+            {/* Buddy Search */}
+            <BuddySearch 
+              currentUserId={user?.id} 
+              onRefreshBuddies={loadNearbyBuddies}
+            />
+
             {/* AI Suggestions Card */}
             <Card className={subscriptionTier === "free" ? "border-muted-foreground/20 bg-muted/20" : "border-primary/20 bg-gradient-to-br from-primary/5 to-secondary/5"}>
               <CardContent className="p-6">
