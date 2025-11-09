@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Shield, ArrowLeft } from "lucide-react";
 import AdminStats from "@/components/admin/AdminStats";
 import UserManagementTable from "@/components/admin/UserManagementTable";
+import RoleManagementTable from "@/components/admin/RoleManagementTable";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -101,9 +102,10 @@ const Admin = () => {
 
       <main className="container mx-auto px-4 py-8">
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 max-w-2xl">
+          <TabsList className="grid w-full grid-cols-5 max-w-3xl">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="users">Users</TabsTrigger>
+            <TabsTrigger value="roles">Roles</TabsTrigger>
             <TabsTrigger value="subscriptions">Subscriptions</TabsTrigger>
             <TabsTrigger value="activities">Activities</TabsTrigger>
           </TabsList>
@@ -114,6 +116,10 @@ const Admin = () => {
 
           <TabsContent value="users" className="space-y-4">
             <UserManagementTable />
+          </TabsContent>
+
+          <TabsContent value="roles" className="space-y-4">
+            <RoleManagementTable />
           </TabsContent>
 
           <TabsContent value="subscriptions" className="space-y-4">
