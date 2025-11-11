@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Check, X, ArrowLeft } from "lucide-react";
+import Footer from "@/components/Footer";
 
 const pricingTiers = [
   {
@@ -92,8 +93,9 @@ const Pricing = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary via-secondary to-accent">
-      <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen flex flex-col">
+      <div className="flex-1 bg-gradient-to-br from-primary via-secondary to-accent">
+        <div className="container mx-auto px-4 py-8">
         <Button
           variant="ghost"
           className="text-white hover:bg-white/10 mb-8"
@@ -208,7 +210,9 @@ const Pricing = () => {
             </div>
           </div>
         </div>
+        </div>
       </div>
+      <Footer />
     </div>
   );
 };

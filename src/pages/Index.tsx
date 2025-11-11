@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Activity, Users, Calendar, TrendingUp, Zap, PlusCircle } from "lucide-react";
+import Footer from "@/components/Footer";
 import fitJogging from "@/assets/fit-jogging.png";
 import fitYoga from "@/assets/fit-yoga.png";
 import fitGym from "@/assets/fit-gym.png";
@@ -30,9 +31,10 @@ const Index = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary via-secondary to-accent">
-      <div className="container mx-auto px-4 py-16 flex flex-col items-center justify-center min-h-screen text-white">
-        <div className="text-center space-y-8 max-w-3xl">
+    <div className="min-h-screen flex flex-col">
+      <div className="flex-1 bg-gradient-to-br from-primary via-secondary to-accent">
+        <div className="container mx-auto px-4 py-16 flex flex-col items-center justify-center text-white">
+          <div className="text-center space-y-8 max-w-3xl">
           <div className="flex justify-center">
             <div className="h-24 w-24 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-2xl">
               <Activity className="h-12 w-12 text-white" />
@@ -153,7 +155,9 @@ const Index = () => {
           </div>
           
         </div>
+        </div>
       </div>
+      <Footer />
     </div>
   );
 };
