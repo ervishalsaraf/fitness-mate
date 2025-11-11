@@ -40,6 +40,27 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
 
+    // Check rate limit (10 requests per minute)
+    const { data: rateLimitOk, error: rateLimitError } = await supabaseClient.rpc('check_rate_limit', {
+      p_user_id: user.id,
+      p_endpoint: 'create-checkout',
+      p_max_requests: 10,
+      p_window_seconds: 60
+    });
+
+    if (rateLimitError) {
+      logStep("Rate limit check error", { error: rateLimitError });
+      throw new Error("Rate limit check failed");
+    }
+
+    if (!rateLimitOk) {
+      logStep("Rate limit exceeded", { userId: user.id });
+      return new Response(JSON.stringify({ error: "Too many requests. Please try again later." }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 429,
+      });
+    }
+
     const { priceId } = await req.json();
     if (!priceId) throw new Error("priceId is required");
     logStep("Price ID received", { priceId });
