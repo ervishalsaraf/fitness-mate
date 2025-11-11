@@ -43,23 +43,44 @@ const RoleManagementTable = ({ filterByRole }: RoleManagementTableProps) => {
   const loadUserRoles = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      // First get user_roles
+      const { data: rolesData, error: rolesError } = await supabase
         .from("user_roles")
-        .select(`
-          id,
-          role,
-          created_at,
-          profiles:user_id (
-            id,
-            full_name,
-            email,
-            avatar_url
-          )
-        `)
+        .select("id, user_id, role, created_at")
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
-      setUserRoles(data || []);
+      if (rolesError) throw rolesError;
+
+      if (!rolesData || rolesData.length === 0) {
+        setUserRoles([]);
+        return;
+      }
+
+      // Get unique user IDs
+      const userIds = [...new Set(rolesData.map(r => r.user_id))];
+
+      // Fetch profiles for these users
+      const { data: profilesData, error: profilesError } = await supabase
+        .from("profiles")
+        .select("id, full_name, email, avatar_url")
+        .in("id", userIds);
+
+      if (profilesError) throw profilesError;
+
+      // Create a map of profiles by ID
+      const profilesMap = new Map(
+        (profilesData || []).map(p => [p.id, p])
+      );
+
+      // Combine the data
+      const combinedData: UserRole[] = rolesData.map(role => ({
+        id: role.id,
+        role: role.role,
+        created_at: role.created_at,
+        profiles: profilesMap.get(role.user_id) || null
+      }));
+
+      setUserRoles(combinedData);
     } catch (error) {
       console.error("Error loading user roles:", error);
       toast({
@@ -134,7 +155,7 @@ const RoleManagementTable = ({ filterByRole }: RoleManagementTableProps) => {
       // Insert the new role
       const { error: insertError } = await supabase
         .from("user_roles")
-        .insert({ user_id: userId, role: newRole });
+        .insert([{ user_id: userId, role: newRole as "admin" | "user" }]);
 
       if (insertError) throw insertError;
 
