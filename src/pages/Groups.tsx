@@ -20,6 +20,7 @@ import EventComments from "@/components/EventComments";
 import UpgradePrompt from "@/components/UpgradePrompt";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { EventCoordinators } from "@/components/EventCoordinators";
 
 
 const createGroupSchema = (locationTimezone: string) => z.object({
@@ -764,6 +765,81 @@ const Groups = () => {
     window.location.href = `sms:?body=${encodeURIComponent(text)}`;
   };
 
+  const handleUpdateGroup = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!editingGroup) return;
+
+    const result = createGroupSchema(locationTimezone).safeParse(formData);
+    if (!result.success) {
+      toast({
+        title: "Validation error",
+        description: result.error.errors[0].message,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setUploadingImages(true);
+    try {
+      await supabase
+        .from("groups")
+        .update({
+          title: formData.title,
+          description: formData.description || null,
+          scheduled_time: formData.scheduled_time,
+          entry_deadline: formData.entry_deadline || null,
+          max_participants: formData.max_participants,
+          allow_comments: formData.allow_comments,
+          comments_public: formData.comments_public,
+          status: formData.status as any,
+        })
+        .eq("id", editingGroup.id);
+
+      // Delete existing coordinators
+      await supabase
+        .from("event_coordinators")
+        .delete()
+        .eq("group_id", editingGroup.id);
+
+      // Add new coordinators
+      if (coordinators.length > 0) {
+        const coordinatorInserts = coordinators
+          .filter(c => c.name && c.contact_info)
+          .map(c => ({
+            group_id: editingGroup.id,
+            name: c.name,
+            contact_info: c.contact_info,
+            display_order: c.display_order,
+          }));
+        
+        if (coordinatorInserts.length > 0) {
+          await supabase
+            .from("event_coordinators")
+            .insert(coordinatorInserts);
+        }
+      }
+
+      toast({
+        title: "Event updated!",
+        description: "Your event has been updated successfully",
+      });
+
+      setEditDialogOpen(false);
+      setEditingGroup(null);
+      loadGroups();
+    } catch (error) {
+      console.error("Error updating group:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update event",
+        variant: "destructive",
+      });
+    } finally {
+      setUploadingImages(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
       <header className="border-b bg-card/80 backdrop-blur-sm sticky top-0 z-10 shadow-sm">
@@ -1265,21 +1341,81 @@ const Groups = () => {
                       <Calendar className="h-4 w-4" />
                       <span>{new Date(group.scheduled_time).toLocaleString()}</span>
                     </div>
+                    {group.entry_deadline && (
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <Clock className="h-4 w-4" />
+                        <span className="text-xs">
+                          Entry closes: {new Date(group.entry_deadline).toLocaleString()}
+                        </span>
+                      </div>
+                    )}
                     <div className="flex items-center gap-2 text-muted-foreground">
                       <Users className="h-4 w-4" />
                       <span>{group.member_count} / {group.max_participants} participants</span>
                     </div>
                   </div>
 
-                  {group.creator_id !== user?.id && (
-                    <Button 
-                      className="w-full mt-4" 
-                      onClick={() => handleJoinGroup(group.id)}
-                      disabled={group.member_count >= group.max_participants}
+                  {(group.is_member || group.creator_id === user?.id) && (
+                    <Collapsible
+                      open={showCoordinators[group.id]}
+                      onOpenChange={(open) => setShowCoordinators({ ...showCoordinators, [group.id]: open })}
+                      className="mt-3"
                     >
-                      {group.member_count >= group.max_participants ? "Full" : "Join Event"}
-                    </Button>
+                      <CollapsibleTrigger asChild>
+                        <Button variant="ghost" size="sm" className="w-full justify-between">
+                          <span className="text-xs">Event Coordinators</span>
+                          <AlertCircle className="h-4 w-4" />
+                        </Button>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="space-y-2 mt-2">
+                        <EventCoordinators groupId={group.id} isVisible={showCoordinators[group.id] || false} />
+                      </CollapsibleContent>
+                    </Collapsible>
                   )}
+
+                  {group.creator_id !== user?.id && (() => {
+                    const status = getEventStatus(group);
+                    const canJoin = status === 'active' || status === 'seats-full';
+                    const isFull = group.member_count >= group.max_participants;
+                    
+                    let buttonText = "Join Event";
+                    let disabledReason = "";
+                    
+                    if (status === 'cancelled') {
+                      buttonText = "Event Cancelled";
+                      disabledReason = "This event has been cancelled";
+                    } else if (status === 'suspended') {
+                      buttonText = "Event Suspended";
+                      disabledReason = "This event is temporarily suspended";
+                    } else if (status === 'completed') {
+                      buttonText = "Event Completed";
+                      disabledReason = "This event has already happened";
+                    } else if (status === 'entry-closed') {
+                      buttonText = "Entry Closed";
+                      disabledReason = "The entry deadline has passed";
+                    } else if (isFull) {
+                      buttonText = "Event Full";
+                      disabledReason = "Maximum participants reached";
+                    }
+                    
+                    return (
+                      <div className="mt-4 space-y-2">
+                        {disabledReason && (
+                          <p className="text-xs text-muted-foreground flex items-center gap-1">
+                            <AlertCircle className="h-3 w-3" />
+                            {disabledReason}
+                          </p>
+                        )}
+                        <Button 
+                          className="w-full" 
+                          onClick={() => handleJoinGroup(group.id)}
+                          disabled={!canJoin || isFull}
+                        >
+                          {buttonText}
+                        </Button>
+                      </div>
+                    );
+                  })()}
 
                   {(group.is_member || group.creator_id === user?.id) && (
                     <div className="mt-4 pt-4 border-t">
@@ -1311,6 +1447,180 @@ const Groups = () => {
         currentUsage={eventCount}
         limit={2}
       />
+
+      {/* Edit Event Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Event</DialogTitle>
+            <DialogDescription>
+              Update your event details, status, and coordinators.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleUpdateGroup} className="space-y-4">
+            <div>
+              <Label htmlFor="edit-title">Event Title *</Label>
+              <Input
+                id="edit-title"
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                required
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="edit-description">Description</Label>
+              <Textarea
+                id="edit-description"
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                rows={3}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="edit-status">Event Status *</Label>
+              <Select
+                value={formData.status}
+                onValueChange={(value) => setFormData({ ...formData, status: value as 'active' })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="suspended">Suspended</SelectItem>
+                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="edit-scheduled_time">Scheduled Time *</Label>
+              <Input
+                id="edit-scheduled_time"
+                type="datetime-local"
+                value={formData.scheduled_time}
+                onChange={(e) => setFormData({ ...formData, scheduled_time: e.target.value })}
+                required
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="edit-entry_deadline">Entry Deadline (Optional)</Label>
+              <Input
+                id="edit-entry_deadline"
+                type="datetime-local"
+                value={formData.entry_deadline}
+                onChange={(e) => setFormData({ ...formData, entry_deadline: e.target.value })}
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Set a deadline for when participants can no longer join
+              </p>
+            </div>
+
+            <div>
+              <Label htmlFor="edit-max_participants">Max Participants</Label>
+              <Input
+                id="edit-max_participants"
+                type="number"
+                min="2"
+                max="100"
+                value={formData.max_participants}
+                onChange={(e) => setFormData({ ...formData, max_participants: parseInt(e.target.value) })}
+              />
+            </div>
+
+            <div className="space-y-4 border-t pt-4">
+              <Label>Event Coordinators (Up to 5)</Label>
+              <div className="space-y-3">
+                {coordinators.map((coordinator, index) => (
+                  <div key={index} className="flex gap-2 p-3 border rounded-md">
+                    <div className="flex-1 space-y-2">
+                      <Input
+                        placeholder="Coordinator Name"
+                        value={coordinator.name}
+                        onChange={(e) => updateCoordinator(index, 'name', e.target.value)}
+                      />
+                      <Input
+                        placeholder="Contact (email or phone)"
+                        value={coordinator.contact_info}
+                        onChange={(e) => updateCoordinator(index, 'contact_info', e.target.value)}
+                      />
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeCoordinator(index)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+                {coordinators.length < 5 && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={addCoordinator}
+                    className="w-full"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Coordinator
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-4 border-t pt-4">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="edit-allow_comments" className="font-normal">
+                  Allow comments on this event
+                </Label>
+                <Switch
+                  id="edit-allow_comments"
+                  checked={formData.allow_comments}
+                  onCheckedChange={(checked) => 
+                    setFormData({ ...formData, allow_comments: checked })
+                  }
+                />
+              </div>
+              
+              {formData.allow_comments && (
+                <RadioGroup
+                  value={formData.comments_public ? "public" : "private"}
+                  onValueChange={(value) => 
+                    setFormData({ ...formData, comments_public: value === "public" })
+                  }
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="public" id="edit-comments-public" />
+                    <Label htmlFor="edit-comments-public" className="font-normal cursor-pointer">
+                      Public comments - All members can see
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="private" id="edit-comments-private" />
+                    <Label htmlFor="edit-comments-private" className="font-normal cursor-pointer">
+                      Private comments - Only you see
+                    </Label>
+                  </div>
+                </RadioGroup>
+              )}
+            </div>
+
+            <div className="flex gap-2 pt-4">
+              <Button type="button" variant="outline" onClick={() => setEditDialogOpen(false)} className="flex-1">
+                Cancel
+              </Button>
+              <Button type="submit" className="flex-1" disabled={uploadingImages}>
+                {uploadingImages ? "Updating..." : "Update Event"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
