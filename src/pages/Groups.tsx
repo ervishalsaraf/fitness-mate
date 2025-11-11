@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Calendar, MapPin, Users, Copy, Check, Plus, Share2 } from "lucide-react";
+import { ArrowLeft, Calendar, MapPin, Users, Copy, Check, Plus, Share2, Upload, X } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { z } from "zod";
 import { toZonedTime, fromZonedTime } from 'date-fns-tz';
@@ -72,6 +72,7 @@ interface Group {
   allow_comments: boolean;
   comments_public: boolean;
   is_member: boolean;
+  image_urls: string[];
 }
 
 // Activity categories for filtering
@@ -128,6 +129,8 @@ const Groups = () => {
   const [locationSuggestions, setLocationSuggestions] = useState<any[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+  const [uploadedImages, setUploadedImages] = useState<File[]>([]);
+  const [uploadingImages, setUploadingImages] = useState(false);
 
   // Debounced search for location suggestions
   useEffect(() => {
@@ -326,6 +329,49 @@ const Groups = () => {
     }
   };
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    
+    if (uploadedImages.length + files.length > 3) {
+      toast({
+        title: "Too many images",
+        description: "You can upload up to 3 images per event",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setUploadedImages([...uploadedImages, ...files]);
+  };
+
+  const removeImage = (index: number) => {
+    setUploadedImages(uploadedImages.filter((_, i) => i !== index));
+  };
+
+  const uploadImagesToStorage = async (groupId: string): Promise<string[]> => {
+    const imageUrls: string[] = [];
+    
+    for (let i = 0; i < uploadedImages.length; i++) {
+      const file = uploadedImages[i];
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}/${groupId}-${Date.now()}-${i}.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('event-images')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from('event-images')
+        .getPublicUrl(fileName);
+
+      imageUrls.push(urlData.publicUrl);
+    }
+    
+    return imageUrls;
+  };
+
   const handleCreateGroup = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -343,6 +389,7 @@ const Groups = () => {
       return;
     }
 
+    setUploadingImages(true);
     try {
       const { data, error } = await supabase
         .from("groups")
@@ -364,6 +411,18 @@ const Groups = () => {
         .single();
 
       if (error) throw error;
+
+      // Upload images if any
+      let imageUrls: string[] = [];
+      if (uploadedImages.length > 0) {
+        imageUrls = await uploadImagesToStorage(data.id);
+        
+        // Update group with image URLs
+        await supabase
+          .from("groups")
+          .update({ image_urls: imageUrls })
+          .eq("id", data.id);
+      }
 
       // Auto-join the creator as a member
       await supabase
@@ -400,6 +459,7 @@ const Groups = () => {
         comments_public: true,
       });
       setLocationInputValue("");
+      setUploadedImages([]);
     } catch (error) {
       console.error("Error creating group:", error);
       toast({
@@ -407,6 +467,8 @@ const Groups = () => {
         description: "Failed to create group",
         variant: "destructive",
       });
+    } finally {
+      setUploadingImages(false);
     }
   };
 
@@ -786,6 +848,47 @@ const Groups = () => {
                 </div>
 
                 <div className="space-y-4 border-t pt-4">
+                  <Label>Event Images (Optional)</Label>
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp,image/jpg"
+                        onChange={handleImageUpload}
+                        disabled={uploadedImages.length >= 3}
+                        multiple
+                        className="flex-1"
+                      />
+                      <Upload className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Upload up to 3 images (max 5MB each)
+                    </p>
+                    
+                    {uploadedImages.length > 0 && (
+                      <div className="grid grid-cols-3 gap-2">
+                        {uploadedImages.map((file, index) => (
+                          <div key={index} className="relative group">
+                            <img
+                              src={URL.createObjectURL(file)}
+                              alt={`Preview ${index + 1}`}
+                              className="w-full h-24 object-cover rounded-md"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => removeImage(index)}
+                              className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-4 border-t pt-4">
                   <Label>Comment Settings</Label>
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
@@ -829,7 +932,9 @@ const Groups = () => {
                   <Button type="button" variant="outline" onClick={() => setCreateDialogOpen(false)} className="flex-1">
                     Cancel
                   </Button>
-                  <Button type="submit" className="flex-1">Create Event</Button>
+                  <Button type="submit" className="flex-1" disabled={uploadingImages}>
+                    {uploadingImages ? "Creating..." : "Create Event"}
+                  </Button>
                 </div>
               </form>
             </DialogContent>
@@ -973,6 +1078,19 @@ const Groups = () => {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-3">
+                  {group.image_urls && group.image_urls.length > 0 && (
+                    <div className={`grid gap-2 ${group.image_urls.length === 1 ? 'grid-cols-1' : group.image_urls.length === 2 ? 'grid-cols-2' : 'grid-cols-3'}`}>
+                      {group.image_urls.map((url, index) => (
+                        <img
+                          key={index}
+                          src={url}
+                          alt={`${group.title} - Image ${index + 1}`}
+                          className="w-full h-32 object-cover rounded-md"
+                        />
+                      ))}
+                    </div>
+                  )}
+                  
                   {group.description && (
                     <p className="text-sm text-muted-foreground line-clamp-2">{group.description}</p>
                   )}

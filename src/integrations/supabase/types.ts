@@ -327,6 +327,7 @@ export type Database = {
           creator_id: string
           description: string | null
           id: string
+          image_urls: string[] | null
           invite_code: string | null
           location_lat: number
           location_lng: number
@@ -345,6 +346,7 @@ export type Database = {
           creator_id: string
           description?: string | null
           id?: string
+          image_urls?: string[] | null
           invite_code?: string | null
           location_lat: number
           location_lng: number
@@ -363,6 +365,7 @@ export type Database = {
           creator_id?: string
           description?: string | null
           id?: string
+          image_urls?: string[] | null
           invite_code?: string | null
           location_lat?: number
           location_lng?: number
