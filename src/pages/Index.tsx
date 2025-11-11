@@ -44,7 +44,35 @@ const Index = () => {
             Plan your cricket matches, basketball games, snooker sessions, and yoga classes. Find fitness partners and join group activities 24/7
           </p>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mt-12">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
+            <Button 
+              size="lg" 
+              variant="secondary"
+              className="text-lg px-8 shadow-xl hover:scale-105 transition-transform"
+              onClick={() => navigate("/auth")}
+            >
+              Get Started
+            </Button>
+            <Button 
+              size="lg" 
+              variant="outline"
+              className="text-lg px-8 bg-white/10 backdrop-blur-sm border-white/30 text-white hover:bg-white/20 shadow-xl hover:scale-105 transition-transform"
+              onClick={() => navigate("/pricing")}
+            >
+              <Zap className="mr-2 h-5 w-5" />
+              View Pricing
+            </Button>
+            <Button 
+              size="lg" 
+              variant="outline"
+              className="text-lg px-8 bg-white/10 backdrop-blur-sm border-white/30 text-white hover:bg-white/20 shadow-xl hover:scale-105 transition-transform"
+              onClick={() => navigate("/auth")}
+            >
+              Sign In
+            </Button>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mt-10">
             <div className="bg-white/10 backdrop-blur-sm p-6 rounded-xl hover:bg-white/15 transition-all">
               <PlusCircle className="h-8 w-8 mb-3 mx-auto" />
               <h3 className="font-semibold mb-2">Create Events</h3>
@@ -117,34 +145,6 @@ const Index = () => {
                 </div>
               ))}
             </div>
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mt-12">
-            <Button 
-              size="lg" 
-              variant="secondary"
-              className="text-lg px-8 shadow-xl hover:scale-105 transition-transform"
-              onClick={() => navigate("/auth")}
-            >
-              Get Started
-            </Button>
-            <Button 
-              size="lg" 
-              variant="outline"
-              className="text-lg px-8 bg-white/10 backdrop-blur-sm border-white/30 text-white hover:bg-white/20 shadow-xl hover:scale-105 transition-transform"
-              onClick={() => navigate("/pricing")}
-            >
-              <Zap className="mr-2 h-5 w-5" />
-              View Pricing
-            </Button>
-            <Button 
-              size="lg" 
-              variant="outline"
-              className="text-lg px-8 bg-white/10 backdrop-blur-sm border-white/30 text-white hover:bg-white/20 shadow-xl hover:scale-105 transition-transform"
-              onClick={() => navigate("/auth")}
-            >
-              Sign In
-            </Button>
           </div>
           
         </div>
