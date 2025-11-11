@@ -253,6 +253,41 @@ export type Database = {
           },
         ]
       }
+      event_coordinators: {
+        Row: {
+          contact_info: string
+          created_at: string | null
+          display_order: number
+          group_id: string
+          id: string
+          name: string
+        }
+        Insert: {
+          contact_info: string
+          created_at?: string | null
+          display_order: number
+          group_id: string
+          id?: string
+          name: string
+        }
+        Update: {
+          contact_info?: string
+          created_at?: string | null
+          display_order?: number
+          group_id?: string
+          id?: string
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_coordinators_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       group_invites: {
         Row: {
           created_at: string | null
@@ -326,14 +361,18 @@ export type Database = {
           created_at: string | null
           creator_id: string
           description: string | null
+          entry_deadline: string | null
           id: string
           image_urls: string[] | null
           invite_code: string | null
+          last_modified_at: string | null
+          last_modified_by: string | null
           location_lat: number
           location_lng: number
           location_name: string
           max_participants: number | null
           scheduled_time: string
+          status: Database["public"]["Enums"]["event_status"] | null
           title: string
           updated_at: string | null
           visibility: Database["public"]["Enums"]["event_visibility"]
@@ -345,14 +384,18 @@ export type Database = {
           created_at?: string | null
           creator_id: string
           description?: string | null
+          entry_deadline?: string | null
           id?: string
           image_urls?: string[] | null
           invite_code?: string | null
+          last_modified_at?: string | null
+          last_modified_by?: string | null
           location_lat: number
           location_lng: number
           location_name: string
           max_participants?: number | null
           scheduled_time: string
+          status?: Database["public"]["Enums"]["event_status"] | null
           title: string
           updated_at?: string | null
           visibility?: Database["public"]["Enums"]["event_visibility"]
@@ -364,14 +407,18 @@ export type Database = {
           created_at?: string | null
           creator_id?: string
           description?: string | null
+          entry_deadline?: string | null
           id?: string
           image_urls?: string[] | null
           invite_code?: string | null
+          last_modified_at?: string | null
+          last_modified_by?: string | null
           location_lat?: number
           location_lng?: number
           location_name?: string
           max_participants?: number | null
           scheduled_time?: string
+          status?: Database["public"]["Enums"]["event_status"] | null
           title?: string
           updated_at?: string | null
           visibility?: Database["public"]["Enums"]["event_visibility"]
@@ -841,6 +888,7 @@ export type Database = {
         | "volleyball"
         | "snooker"
       app_role: "admin" | "user"
+      event_status: "active" | "cancelled" | "suspended" | "completed"
       event_visibility: "public" | "private"
       gender: "male" | "female" | "other" | "prefer_not_to_say"
       skill_level: "beginner" | "intermediate" | "advanced"
@@ -991,6 +1039,7 @@ export const Constants = {
         "snooker",
       ],
       app_role: ["admin", "user"],
+      event_status: ["active", "cancelled", "suspended", "completed"],
       event_visibility: ["public", "private"],
       gender: ["male", "female", "other", "prefer_not_to_say"],
       skill_level: ["beginner", "intermediate", "advanced"],

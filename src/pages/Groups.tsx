@@ -11,13 +11,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Calendar, MapPin, Users, Copy, Check, Plus, Share2, Upload, X } from "lucide-react";
+import { ArrowLeft, Calendar, MapPin, Users, Copy, Check, Plus, Share2, Upload, X, Edit, Clock, Phone, Mail, AlertCircle } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { z } from "zod";
 import { toZonedTime, fromZonedTime } from 'date-fns-tz';
 import { addHours } from 'date-fns';
 import EventComments from "@/components/EventComments";
 import UpgradePrompt from "@/components/UpgradePrompt";
+import { Badge } from "@/components/ui/badge";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 
 const createGroupSchema = (locationTimezone: string) => z.object({
@@ -29,14 +31,9 @@ const createGroupSchema = (locationTimezone: string) => z.object({
   location_lng: z.number().min(-180).max(180),
   scheduled_time: z.string().min(1, "Scheduled time required").refine((dateString) => {
     try {
-      // Parse the input datetime-local value (which is in the browser's local timezone)
       const selectedDate = new Date(dateString);
-      
-      // Get current time in the location's timezone
       const nowInLocationTz = toZonedTime(new Date(), locationTimezone);
       const sixHoursFromNowInLocationTz = addHours(nowInLocationTz, 6);
-      
-      // Convert selected date to location's timezone for comparison
       const selectedDateInLocationTz = toZonedTime(selectedDate, locationTimezone);
       
       if (selectedDateInLocationTz < nowInLocationTz) {
@@ -53,6 +50,10 @@ const createGroupSchema = (locationTimezone: string) => z.object({
   }, {
     message: "Event must be scheduled at least 6 hours from now (in the event location's timezone)"
   }),
+  entry_deadline: z.string().optional().refine((val) => {
+    if (!val) return true;
+    return new Date(val) > new Date();
+  }, { message: "Entry deadline must be in the future" }),
   max_participants: z.number().int().min(2).max(100),
   visibility: z.enum(["public", "private"]),
 });
@@ -73,7 +74,19 @@ interface Group {
   comments_public: boolean;
   is_member: boolean;
   image_urls: string[];
+  status: 'active' | 'cancelled' | 'suspended' | 'completed';
+  entry_deadline: string | null;
+  last_modified_at: string | null;
 }
+
+interface Coordinator {
+  id?: string;
+  name: string;
+  contact_info: string;
+  display_order: number;
+}
+
+type EventStatus = 'active' | 'seats-full' | 'entry-closed' | 'cancelled' | 'suspended' | 'completed';
 
 // Activity categories for filtering
 const activityCategories = {
@@ -118,10 +131,12 @@ const Groups = () => {
     location_lat: 0,
     location_lng: 0,
     scheduled_time: "",
+    entry_deadline: "",
     max_participants: 10,
     visibility: "public",
     allow_comments: true,
     comments_public: true,
+    status: "active" as const,
   });
   const [locationTimezone, setLocationTimezone] = useState<string>("UTC");
   const [fetchingTimezone, setFetchingTimezone] = useState(false);
@@ -131,6 +146,10 @@ const Groups = () => {
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
   const [uploadedImages, setUploadedImages] = useState<File[]>([]);
   const [uploadingImages, setUploadingImages] = useState(false);
+  const [coordinators, setCoordinators] = useState<Coordinator[]>([]);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingGroup, setEditingGroup] = useState<Group | null>(null);
+  const [showCoordinators, setShowCoordinators] = useState<Record<string, boolean>>({});
 
   // Debounced search for location suggestions
   useEffect(() => {
@@ -177,6 +196,52 @@ const Groups = () => {
     setLocationInputValue(place.display_name);
     setShowSuggestions(false);
     setLocationSuggestions([]);
+  };
+
+  const getEventStatus = (group: Group): EventStatus => {
+    if (group.status === 'cancelled') return 'cancelled';
+    if (group.status === 'suspended') return 'suspended';
+    if (new Date(group.scheduled_time) < new Date()) return 'completed';
+    if (group.entry_deadline && new Date(group.entry_deadline) < new Date()) return 'entry-closed';
+    if (group.member_count >= group.max_participants) return 'seats-full';
+    return 'active';
+  };
+
+  const getStatusBadge = (status: EventStatus) => {
+    const config = {
+      'active': { label: 'Active', variant: 'default' as const, className: 'bg-green-500' },
+      'seats-full': { label: 'Seats Full', variant: 'secondary' as const, className: 'bg-amber-500' },
+      'entry-closed': { label: 'Entry Closed', variant: 'secondary' as const, className: 'bg-blue-500' },
+      'cancelled': { label: 'Cancelled', variant: 'destructive' as const, className: '' },
+      'suspended': { label: 'Suspended', variant: 'secondary' as const, className: 'bg-yellow-500' },
+      'completed': { label: 'Completed', variant: 'secondary' as const, className: 'bg-gray-500' },
+    };
+    
+    const { label, variant, className } = config[status];
+    return <Badge variant={variant} className={className}>{label}</Badge>;
+  };
+
+  const addCoordinator = () => {
+    if (coordinators.length >= 5) {
+      toast({
+        title: "Maximum coordinators reached",
+        description: "You can add up to 5 coordinators per event",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setCoordinators([...coordinators, { name: "", contact_info: "", display_order: coordinators.length + 1 }]);
+  };
+
+  const removeCoordinator = (index: number) => {
+    setCoordinators(coordinators.filter((_, i) => i !== index).map((c, i) => ({ ...c, display_order: i + 1 })));
+  };
+
+  const updateCoordinator = (index: number, field: keyof Coordinator, value: string) => {
+    const updated = [...coordinators];
+    updated[index] = { ...updated[index], [field]: value };
+    setCoordinators(updated);
   };
 
   useEffect(() => {
@@ -259,6 +324,9 @@ const Groups = () => {
           ...group,
           member_count: group.group_members?.[0]?.count || 0,
           is_member: !!memberData,
+          image_urls: group.image_urls || [],
+          status: group.status || 'active',
+          entry_deadline: group.entry_deadline,
         };
       }));
 
@@ -401,6 +469,7 @@ const Groups = () => {
           location_lat: formData.location_lat,
           location_lng: formData.location_lng,
           scheduled_time: formData.scheduled_time,
+          entry_deadline: formData.entry_deadline || null,
           max_participants: formData.max_participants,
           visibility: formData.visibility as any,
           creator_id: user.id,
@@ -422,6 +491,24 @@ const Groups = () => {
           .from("groups")
           .update({ image_urls: imageUrls })
           .eq("id", data.id);
+      }
+
+      // Add coordinators if any
+      if (coordinators.length > 0) {
+        const coordinatorInserts = coordinators
+          .filter(c => c.name && c.contact_info)
+          .map(c => ({
+            group_id: data.id,
+            name: c.name,
+            contact_info: c.contact_info,
+            display_order: c.display_order,
+          }));
+        
+        if (coordinatorInserts.length > 0) {
+          await supabase
+            .from("event_coordinators")
+            .insert(coordinatorInserts);
+        }
       }
 
       // Auto-join the creator as a member
@@ -453,13 +540,16 @@ const Groups = () => {
         location_lat: 0,
         location_lng: 0,
         scheduled_time: "",
+        entry_deadline: "",
         max_participants: 10,
         visibility: "public",
         allow_comments: true,
         comments_public: true,
+        status: "active" as const,
       });
       setLocationInputValue("");
       setUploadedImages([]);
+      setCoordinators([]);
     } catch (error) {
       console.error("Error creating group:", error);
       toast({
@@ -826,6 +916,20 @@ const Groups = () => {
                 </div>
 
                 <div>
+                  <Label htmlFor="entry_deadline">Entry Deadline (Optional)</Label>
+                  <Input
+                    id="entry_deadline"
+                    type="datetime-local"
+                    value={formData.entry_deadline}
+                    onChange={(e) => setFormData({ ...formData, entry_deadline: e.target.value })}
+                    min={new Date().toISOString().slice(0, 16)}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Set a deadline for when participants can no longer join this event
+                  </p>
+                </div>
+
+                <div>
                   <Label>Event Visibility *</Label>
                   <RadioGroup
                     value={formData.visibility}
@@ -845,6 +949,51 @@ const Groups = () => {
                       </Label>
                     </div>
                   </RadioGroup>
+                </div>
+
+                <div className="space-y-4 border-t pt-4">
+                  <Label>Event Coordinators (Optional - Up to 5)</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Add event coordinator contact details. Members can see this info after joining.
+                  </p>
+                  <div className="space-y-3">
+                    {coordinators.map((coordinator, index) => (
+                      <div key={index} className="flex gap-2 p-3 border rounded-md">
+                        <div className="flex-1 space-y-2">
+                          <Input
+                            placeholder="Coordinator Name"
+                            value={coordinator.name}
+                            onChange={(e) => updateCoordinator(index, 'name', e.target.value)}
+                          />
+                          <Input
+                            placeholder="Contact (email or phone)"
+                            value={coordinator.contact_info}
+                            onChange={(e) => updateCoordinator(index, 'contact_info', e.target.value)}
+                          />
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => removeCoordinator(index)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                    {coordinators.length < 5 && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={addCoordinator}
+                        className="w-full"
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Coordinator
+                      </Button>
+                    )}
+                  </div>
                 </div>
 
                 <div className="space-y-4 border-t pt-4">
@@ -1001,80 +1150,92 @@ const Groups = () => {
               {filteredGroups.map((group) => (
               <Card key={group.id} className="hover:shadow-lg transition-shadow">
                 <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <CardTitle className="text-lg">{group.title}</CardTitle>
+                  <div className="flex justify-between items-start gap-2">
+                    <div className="flex-1 space-y-2">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <CardTitle className="text-lg">{group.title}</CardTitle>
+                        {getStatusBadge(getEventStatus(group))}
+                      </div>
                       <CardDescription className="mt-1">
                         {group.activity_type.charAt(0).toUpperCase() + group.activity_type.slice(1)}
                       </CardDescription>
                     </div>
-                    {group.visibility === "private" && group.creator_id === user?.id && (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button size="sm" variant="outline">
-                            <Share2 className="h-4 w-4" />
+                    <div className="flex gap-1 flex-wrap">
+                      {group.creator_id === user?.id && (
+                        <>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={async () => {
+                              setEditingGroup(group);
+                              setFormData({
+                                title: group.title,
+                                description: group.description || "",
+                                activity_type: group.activity_type,
+                                location_name: group.location_name,
+                                location_lat: 0,
+                                location_lng: 0,
+                                scheduled_time: new Date(group.scheduled_time).toISOString().slice(0, 16),
+                                entry_deadline: group.entry_deadline ? new Date(group.entry_deadline).toISOString().slice(0, 16) : "",
+                                max_participants: group.max_participants,
+                                visibility: group.visibility,
+                                allow_comments: group.allow_comments,
+                                comments_public: group.comments_public,
+                                status: group.status as 'active',
+                              });
+                              
+                              const { data: coordData } = await supabase
+                                .from('event_coordinators')
+                                .select('*')
+                                .eq('group_id', group.id)
+                                .order('display_order');
+                              
+                              setCoordinators(coordData || []);
+                              setEditDialogOpen(true);
+                            }}
+                          >
+                            <Edit className="h-4 w-4" />
                           </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => copyInviteLink(group.invite_code!)}>
-                            <Copy className="h-4 w-4 mr-2" />
-                            {copiedCode === group.invite_code ? "Copied!" : "Copy Link"}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => shareViaWhatsApp(group.invite_code!, group.title)}>
-                            <svg className="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
-                            </svg>
-                            WhatsApp
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => shareViaSMS(group.invite_code!, group.title)}>
-                            <svg className="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                              <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/>
-                            </svg>
-                            Message
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => shareViaFacebook(group.invite_code!)}>
-                            <svg className="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                              <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                            </svg>
-                            Facebook
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => shareViaTwitter(group.invite_code!, group.title)}>
-                            <svg className="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-                            </svg>
-                          Twitter
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  )}
-                  {group.visibility === 'private' && group.invite_code && (
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="secondary" size="sm" className="h-8">
-                          <Users className="h-4 w-4 mr-2" />
-                          Invite Friend
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => shareReferralWithEvent(group.invite_code!, group.title)}>
-                          <Share2 className="h-4 w-4 mr-2" />
-                          Share Invite
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => shareReferralEventViaWhatsApp(group.invite_code!, group.title)}>
-                          <svg className="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
-                          </svg>
-                          WhatsApp
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => shareReferralEventViaSMS(group.invite_code!, group.title)}>
-                          <svg className="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/>
-                          </svg>
-                          Message
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  )}
+                          {group.visibility === "private" && group.invite_code && (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button size="sm" variant="outline">
+                                  <Share2 className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => copyInviteLink(group.invite_code!)}>
+                                  <Copy className="h-4 w-4 mr-2" />
+                                  {copiedCode === group.invite_code ? "Copied!" : "Copy Link"}
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => shareViaWhatsApp(group.invite_code!, group.title)}>
+                                  <svg className="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+                                  </svg>
+                                  WhatsApp
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          )}
+                        </>
+                      )}
+                      {group.visibility === 'private' && group.invite_code && group.creator_id !== user?.id && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="secondary" size="sm">
+                              <Users className="h-4 w-4 mr-2" />
+                              Invite
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => shareReferralWithEvent(group.invite_code!, group.title)}>
+                              <Share2 className="h-4 w-4 mr-2" />
+                              Share Invite
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-3">
