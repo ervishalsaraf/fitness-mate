@@ -93,6 +93,32 @@ const Index = () => {
             </div>
           </div>
 
+          <div className="mt-16">
+            <h2 className="text-3xl font-bold mb-3">Popular Activities</h2>
+            <p className="text-white/80 mb-8">Create events and find partners for any of these activities</p>
+            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-6">
+              {activityData.map((activity) => (
+                <div 
+                  key={activity.name}
+                  className="flex flex-col items-center gap-3 p-4 bg-white/10 backdrop-blur-sm rounded-xl hover:bg-white/20 transition-all hover:scale-105"
+                >
+                  <img 
+                    src={activity.icon} 
+                    alt={activity.name}
+                    className="w-16 h-16 object-contain transition-transform hover:scale-110 drop-shadow-lg"
+                  />
+                  <span className="text-sm font-medium text-center">{activity.name}</span>
+                  <Badge 
+                    variant="outline" 
+                    className={`text-xs ${activity.categoryColor} border`}
+                  >
+                    {activity.category}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          </div>
+
           <div className="flex flex-col sm:flex-row gap-4 justify-center mt-12">
             <Button 
               size="lg" 
@@ -121,32 +147,6 @@ const Index = () => {
             </Button>
           </div>
           
-          <div className="mt-16">
-            <h2 className="text-3xl font-bold mb-3">Popular Activities</h2>
-            <p className="text-white/80 mb-8">Create events and find partners for any of these activities</p>
-            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-6">
-              {activityData.map((activity) => (
-                <div 
-                  key={activity.name}
-                  className="flex flex-col items-center gap-3 p-4 bg-white/10 backdrop-blur-sm rounded-xl hover:bg-white/20 transition-all hover:scale-105"
-                >
-                  <img 
-                    src={activity.icon} 
-                    alt={activity.name}
-                    className="w-16 h-16 object-contain transition-transform hover:scale-110 drop-shadow-lg"
-                  />
-                  <span className="text-sm font-medium text-center">{activity.name}</span>
-                  <Badge 
-                    variant="outline" 
-                    className={`text-xs ${activity.categoryColor} border`}
-                  >
-                    {activity.category}
-                  </Badge>
-                </div>
-              ))}
-            </div>
-          </div>
-
         </div>
       </div>
     </div>
