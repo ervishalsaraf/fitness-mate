@@ -40,9 +40,14 @@ const Index = () => {
           </div>
           
           <h1 className="text-5xl md:text-6xl font-bold">Fit Connect24</h1>
-          <p className="text-xl md:text-2xl text-white/90">
-            Plan your cricket matches, basketball games, snooker sessions, and yoga classes. Find fitness partners and join group activities 24/7
-          </p>
+          <div className="space-y-2">
+            <div className="inline-block bg-gradient-to-r from-green-500 to-emerald-500 text-white px-6 py-3 rounded-full text-lg font-bold animate-pulse shadow-xl">
+              🎉 Get 30 Days Premium FREE!
+            </div>
+            <p className="text-xl md:text-2xl text-white/90">
+              Plan your cricket matches, basketball games, snooker sessions, and yoga classes. Find fitness partners and join group activities 24/7
+            </p>
+          </div>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
             <Button 

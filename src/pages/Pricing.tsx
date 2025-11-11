@@ -34,7 +34,7 @@ const pricingTiers = [
     name: "Premium",
     price: "$10",
     period: "per month",
-    description: "For serious fitness enthusiasts",
+    description: "30 days FREE for new users!",
     popular: true,
     features: [
       { text: "Everything in Free", included: true },
@@ -104,11 +104,14 @@ const Pricing = () => {
         </Button>
 
         <div className="text-center text-white mb-12">
+          <div className="inline-block bg-gradient-to-r from-green-500 to-emerald-500 text-white px-6 py-2 rounded-full text-sm font-semibold mb-4 animate-pulse">
+            🎉 NEW USERS GET 30 DAYS FREE PREMIUM!
+          </div>
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
             Choose Your Fitness Journey
           </h1>
           <p className="text-xl text-white/90 max-w-2xl mx-auto">
-            Select the plan that best fits your fitness goals and unlock features to enhance your experience
+            Start with 30 days of Premium access, then select the plan that best fits your fitness goals
           </p>
         </div>
 
@@ -200,7 +203,7 @@ const Pricing = () => {
             <div className="bg-white/10 backdrop-blur-sm p-4 rounded-lg">
               <p className="font-medium mb-2">Is there a free trial?</p>
               <p className="text-sm text-white/70">
-                Yes! Start with our Free plan and upgrade when you're ready to unlock more features.
+                Yes! All new users automatically get 30 days of Premium access for FREE. Experience all premium features with no credit card required. After 30 days, you can choose to continue with Premium or switch to our Free plan.
               </p>
             </div>
           </div>
