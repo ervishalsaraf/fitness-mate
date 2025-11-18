@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Activity, Mail, MessageSquare } from "lucide-react";
+import { Activity, Mail, MessageSquare, ActivitySquare } from "lucide-react";
 
 const Footer = () => {
   return (
@@ -53,6 +53,12 @@ const Footer = () => {
                 <Link to="/feedback" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2">
                   <MessageSquare className="h-4 w-4" />
                   Send Feedback
+                </Link>
+              </li>
+              <li>
+                <Link to="/status" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2">
+                  <ActivitySquare className="h-4 w-4" />
+                  System Status
                 </Link>
               </li>
             </ul>
