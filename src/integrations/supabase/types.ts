@@ -676,6 +676,7 @@ export type Database = {
           location_lat: number
           location_lng: number
           location_name: string
+          nickname: string | null
           user_id: string
         }
         Insert: {
@@ -686,6 +687,7 @@ export type Database = {
           location_lat: number
           location_lng: number
           location_name: string
+          nickname?: string | null
           user_id: string
         }
         Update: {
@@ -696,6 +698,7 @@ export type Database = {
           location_lat?: number
           location_lng?: number
           location_name?: string
+          nickname?: string | null
           user_id?: string
         }
         Relationships: [
