@@ -12,7 +12,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { UserPlus, Check, Clock } from "lucide-react";
+import { UserPlus, Check, Clock, MapPin, Star, Home } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface SearchResult {
@@ -24,6 +24,15 @@ interface SearchResult {
   location_name?: string;
   activities: string[];
   connectionStatus?: "none" | "pending" | "accepted";
+}
+
+interface SavedLocation {
+  id: string;
+  location_name: string;
+  location_lat: number;
+  location_lng: number;
+  is_favorite: boolean;
+  is_default: boolean;
 }
 
 interface BuddySearchProps {
@@ -43,6 +52,28 @@ const BuddySearch = ({ currentUserId, onRefreshBuddies }: BuddySearchProps) => {
   const [loadingLocationSuggestions, setLoadingLocationSuggestions] = useState(false);
   const [searchMode, setSearchMode] = useState<"name" | "location">("name");
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number; name: string } | null>(null);
+  const [savedLocations, setSavedLocations] = useState<SavedLocation[]>([]);
+
+  // Load saved locations
+  useEffect(() => {
+    loadSavedLocations();
+  }, [currentUserId]);
+
+  const loadSavedLocations = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("saved_locations")
+        .select("*")
+        .eq("user_id", currentUserId)
+        .order("is_default", { ascending: false })
+        .order("is_favorite", { ascending: false });
+
+      if (error) throw error;
+      setSavedLocations(data || []);
+    } catch (error) {
+      console.error("Error loading saved locations:", error);
+    }
+  };
 
   // Location autocomplete
   useEffect(() => {
@@ -310,6 +341,45 @@ const BuddySearch = ({ currentUserId, onRefreshBuddies }: BuddySearchProps) => {
               Search by Location
             </Button>
           </div>
+
+          {/* Saved Locations Quick Access - Only show in location mode */}
+          {searchMode === "location" && savedLocations.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-xs text-muted-foreground font-medium">Saved Locations</p>
+              <div className="grid grid-cols-1 gap-2">
+                {savedLocations.map((location) => (
+                  <button
+                    key={location.id}
+                    className="w-full text-left px-3 py-2 border rounded-md hover:bg-accent transition-colors"
+                    onClick={() => {
+                      setSelectedLocation({
+                        lat: location.location_lat,
+                        lng: location.location_lng,
+                        name: location.location_name,
+                      });
+                      setSearchQuery(location.location_name);
+                      setShowLocationSuggestions(false);
+                    }}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <MapPin className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+                        <span className="text-sm truncate">{location.location_name.split(",")[0]}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        {location.is_default && (
+                          <Home className="h-3 w-3 text-primary" />
+                        )}
+                        {location.is_favorite && (
+                          <Star className="h-3 w-3 fill-yellow-500 text-yellow-500" />
+                        )}
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Search Input */}
           <div className="relative">
