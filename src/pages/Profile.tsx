@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Copy, Share2, Users, Globe, Lock, Crown, Zap, User as UserIcon, Calendar as CalendarIcon } from "lucide-react";
 import { LocationManager } from "@/components/LocationManager";
+import { SavedLocations } from "@/components/SavedLocations";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -254,6 +255,7 @@ const Profile = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8 max-w-2xl space-y-6">
+        <SavedLocations />
         <LocationManager />
         
         <Card>

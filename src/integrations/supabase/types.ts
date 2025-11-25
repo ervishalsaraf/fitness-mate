@@ -667,6 +667,47 @@ export type Database = {
           },
         ]
       }
+      saved_locations: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_default: boolean
+          is_favorite: boolean
+          location_lat: number
+          location_lng: number
+          location_name: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_default?: boolean
+          is_favorite?: boolean
+          location_lat: number
+          location_lng: number
+          location_name: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_default?: boolean
+          is_favorite?: boolean
+          location_lat?: number
+          location_lng?: number
+          location_name?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_locations_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       streaks: {
         Row: {
           created_at: string | null
