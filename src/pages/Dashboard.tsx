@@ -115,12 +115,31 @@ const Dashboard = () => {
     }
   };
 
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 6371; // Earth's radius in km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
+
   const loadNearbyBuddies = async () => {
     if (!user) return;
     
     setLoading(true);
     
     try {
+      // Get current user's location
+      const { data: currentUserProfile } = await supabase
+        .from("profiles")
+        .select("location_lat, location_lng")
+        .eq("id", user.id)
+        .single();
+
       // Only fetch profiles of accepted buddy connections
       const { data, error } = await supabase
         .from("buddy_connections")
@@ -133,6 +152,8 @@ const Dashboard = () => {
             id,
             full_name,
             skill_level,
+            location_lat,
+            location_lng,
             activity_preferences (activity_type),
             time_preferences (time_slot)
           ),
@@ -140,6 +161,8 @@ const Dashboard = () => {
             id,
             full_name,
             skill_level,
+            location_lat,
+            location_lng,
             activity_preferences (activity_type),
             time_preferences (time_slot)
           )
@@ -158,13 +181,24 @@ const Dashboard = () => {
           ? connection.receiver 
           : connection.requester;
         
+        let distance: number | undefined;
+        if (currentUserProfile?.location_lat && currentUserProfile?.location_lng && 
+            profile.location_lat && profile.location_lng) {
+          distance = calculateDistance(
+            currentUserProfile.location_lat,
+            currentUserProfile.location_lng,
+            profile.location_lat,
+            profile.location_lng
+          );
+        }
+        
         return {
           id: profile.id,
           full_name: profile.full_name,
           skill_level: profile.skill_level,
           activities: profile.activity_preferences?.map((p: any) => p.activity_type) || [],
           times: profile.time_preferences?.map((p: any) => p.time_slot) || [],
-          distance: Math.floor(Math.random() * 5) + 0.5, // Mock distance
+          distance: distance ? parseFloat(distance.toFixed(1)) : undefined,
         };
       });
 
