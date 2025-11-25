@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { MapPin, Star, Trash2, Home, Plus, Loader2 } from "lucide-react";
+import { MapPin, Star, Trash2, Home, Plus, Loader2, Pencil } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface SavedLocation {
@@ -15,6 +15,7 @@ interface SavedLocation {
   location_lng: number;
   is_favorite: boolean;
   is_default: boolean;
+  nickname?: string;
 }
 
 interface LocationSuggestion {
@@ -32,6 +33,8 @@ export const SavedLocations = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [suggestions, setSuggestions] = useState<LocationSuggestion[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editNickname, setEditNickname] = useState("");
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
 
   useEffect(() => {
@@ -206,6 +209,43 @@ export const SavedLocations = () => {
     }
   };
 
+  const startEditing = (location: SavedLocation) => {
+    setEditingId(location.id);
+    setEditNickname(location.nickname || location.location_name.split(",")[0]);
+  };
+
+  const cancelEditing = () => {
+    setEditingId(null);
+    setEditNickname("");
+  };
+
+  const updateNickname = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from("saved_locations")
+        .update({ nickname: editNickname.trim() || null })
+        .eq("id", id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Nickname updated successfully",
+      });
+
+      setEditingId(null);
+      setEditNickname("");
+      loadSavedLocations();
+    } catch (error) {
+      console.error("Error updating nickname:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update nickname",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (loading) {
     return (
       <Card>
@@ -278,63 +318,107 @@ export const SavedLocations = () => {
                 key={location.id}
                 className="p-3 border rounded-lg bg-card hover:bg-muted/50 transition-colors"
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      <h4 className="font-medium text-sm truncate">
-                        {location.location_name.split(",")[0]}
-                      </h4>
-                      {location.is_default && (
-                        <Badge variant="default" className="text-xs">
-                          <Home className="h-3 w-3 mr-1" />
-                          Default
-                        </Badge>
-                      )}
-                      {location.is_favorite && (
-                        <Badge variant="secondary" className="text-xs">
-                          <Star className="h-3 w-3 mr-1" />
-                          Favorite
-                        </Badge>
-                      )}
-                    </div>
-                    <p className="text-xs text-muted-foreground line-clamp-1">
-                      {location.location_name}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-8 w-8"
-                      onClick={() => toggleFavorite(location.id, location.is_favorite)}
-                    >
-                      <Star
-                        className={`h-4 w-4 ${
-                          location.is_favorite ? "fill-yellow-500 text-yellow-500" : ""
-                        }`}
+                {editingId === location.id ? (
+                  <div className="space-y-3">
+                    <div>
+                      <Label htmlFor={`nickname-${location.id}`} className="text-xs">
+                        Custom Nickname
+                      </Label>
+                      <Input
+                        id={`nickname-${location.id}`}
+                        value={editNickname}
+                        onChange={(e) => setEditNickname(e.target.value)}
+                        placeholder="e.g., Home, Work, Gym"
+                        className="mt-1"
                       />
-                    </Button>
-                    {!location.is_default && (
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Original: {location.location_name}
+                    </p>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        onClick={() => updateNickname(location.id)}
+                      >
+                        Save
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={cancelEditing}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        <h4 className="font-medium text-sm truncate">
+                          {location.nickname || location.location_name.split(",")[0]}
+                        </h4>
+                        {location.is_default && (
+                          <Badge variant="default" className="text-xs">
+                            <Home className="h-3 w-3 mr-1" />
+                            Default
+                          </Badge>
+                        )}
+                        {location.is_favorite && (
+                          <Badge variant="secondary" className="text-xs">
+                            <Star className="h-3 w-3 mr-1" />
+                            Favorite
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground line-clamp-1">
+                        {location.location_name}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-1">
                       <Button
                         size="icon"
                         variant="ghost"
                         className="h-8 w-8"
-                        onClick={() => setDefault(location.id)}
-                        title="Set as default"
+                        onClick={() => startEditing(location)}
+                        title="Edit nickname"
                       >
-                        <Home className="h-4 w-4" />
+                        <Pencil className="h-4 w-4" />
                       </Button>
-                    )}
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-8 w-8 text-destructive hover:text-destructive"
-                      onClick={() => deleteLocation(location.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8"
+                        onClick={() => toggleFavorite(location.id, location.is_favorite)}
+                      >
+                        <Star
+                          className={`h-4 w-4 ${
+                            location.is_favorite ? "fill-yellow-500 text-yellow-500" : ""
+                          }`}
+                        />
+                      </Button>
+                      {!location.is_default && (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8"
+                          onClick={() => setDefault(location.id)}
+                          title="Set as default"
+                        >
+                          <Home className="h-4 w-4" />
+                        </Button>
+                      )}
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8 text-destructive hover:text-destructive"
+                        onClick={() => deleteLocation(location.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             ))}
           </div>
