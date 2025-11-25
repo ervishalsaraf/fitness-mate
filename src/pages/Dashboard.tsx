@@ -13,6 +13,7 @@ import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import UpgradePrompt from "@/components/UpgradePrompt";
 import BuddySearch from "@/components/BuddySearch";
+import MapView from "@/components/MapView";
 
 interface Profile {
   id: string;
@@ -21,6 +22,8 @@ interface Profile {
   activities: string[];
   times: string[];
   distance?: number;
+  location_lat?: number;
+  location_lng?: number;
 }
 
 const Dashboard = () => {
@@ -31,6 +34,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [subscriptionTier, setSubscriptionTier] = useState<string>("free");
   const [checkingSubscription, setCheckingSubscription] = useState(false);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   
   // Filter state
   const [showFilters, setShowFilters] = useState(false);
@@ -140,6 +144,14 @@ const Dashboard = () => {
         .eq("id", user.id)
         .single();
 
+      // Set user location for map
+      if (currentUserProfile?.location_lat && currentUserProfile?.location_lng) {
+        setUserLocation({
+          lat: currentUserProfile.location_lat,
+          lng: currentUserProfile.location_lng
+        });
+      }
+
       // Only fetch profiles of accepted buddy connections
       const { data, error } = await supabase
         .from("buddy_connections")
@@ -199,6 +211,8 @@ const Dashboard = () => {
           activities: profile.activity_preferences?.map((p: any) => p.activity_type) || [],
           times: profile.time_preferences?.map((p: any) => p.time_slot) || [],
           distance: distance ? parseFloat(distance.toFixed(1)) : undefined,
+          location_lat: profile.location_lat,
+          location_lng: profile.location_lng,
         };
       });
 
@@ -700,18 +714,11 @@ const Dashboard = () => {
           </TabsContent>
 
           <TabsContent value="map">
-            <Card>
-              <CardHeader>
-                <CardTitle>Map View</CardTitle>
-                <CardDescription>See buddies on a map near you</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-12 space-y-4 bg-muted/20 rounded-lg border-2 border-dashed">
-                  <MapPin className="h-12 w-12 mx-auto text-muted-foreground" />
-                  <p className="text-muted-foreground">Map integration coming soon</p>
-                </div>
-              </CardContent>
-            </Card>
+            <MapView 
+              userLocation={userLocation}
+              buddies={filteredBuddies}
+              distanceFilter={maxDistance}
+            />
           </TabsContent>
         </Tabs>
       </main>
