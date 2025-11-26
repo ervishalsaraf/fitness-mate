@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Activity, Users, Calendar, TrendingUp, Zap, PlusCircle } from "lucide-react";
 import Footer from "@/components/Footer";
+import ParticleBackground from "@/components/ParticleBackground";
 import fitJogging from "@/assets/fit-jogging.png";
 import fitYoga from "@/assets/fit-yoga.png";
 import fitGym from "@/assets/fit-gym.png";
@@ -38,6 +39,8 @@ const Index = () => {
 
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden">
+      <ParticleBackground />
+      
       {/* Left side decorative images */}
       <div className="hidden xl:block fixed left-4 top-20 space-y-8 opacity-20 pointer-events-none z-0">
         <img src={sketchBasketball} alt="" className="w-24 h-24 object-contain animate-float" />
