@@ -13,6 +13,12 @@ import fitBasketball from "@/assets/fit-basketball.png";
 import fitBadminton from "@/assets/fit-badminton.png";
 import fitVolleyball from "@/assets/fit-volleyball.png";
 import fitSnooker from "@/assets/fit-snooker.png";
+import sketchBasketball from "@/assets/sketch-basketball.png";
+import sketchCricket from "@/assets/sketch-cricket.png";
+import sketchExercise from "@/assets/sketch-exercise.png";
+import sketchFootball from "@/assets/sketch-football.png";
+import sketchYoga from "@/assets/sketch-yoga.png";
+import sketchRunning from "@/assets/sketch-running.png";
 
 const activityData = [
   { name: "Jogging & Stretching", icon: fitJogging, category: "Individual Fitness", categoryColor: "bg-green-500/10 text-green-700 border-green-500/20" },
@@ -31,8 +37,30 @@ const Index = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <div className="flex-1 bg-gradient-to-br from-primary via-secondary to-accent">
+    <div className="min-h-screen flex flex-col relative overflow-hidden">
+      {/* Left side decorative images */}
+      <div className="hidden xl:block fixed left-4 top-20 space-y-8 opacity-20 pointer-events-none z-0">
+        <img src={sketchBasketball} alt="" className="w-24 h-24 object-contain animate-float" />
+        <img src={fitYoga} alt="" className="w-20 h-20 object-contain animate-float" style={{ animationDelay: '1s' }} />
+        <img src={sketchCricket} alt="" className="w-28 h-28 object-contain animate-float" style={{ animationDelay: '2s' }} />
+      </div>
+      <div className="hidden xl:block fixed left-8 bottom-20 space-y-8 opacity-20 pointer-events-none z-0">
+        <img src={sketchExercise} alt="" className="w-24 h-24 object-contain animate-float" style={{ animationDelay: '0.5s' }} />
+        <img src={fitGym} alt="" className="w-20 h-20 object-contain animate-float" style={{ animationDelay: '1.5s' }} />
+      </div>
+
+      {/* Right side decorative images */}
+      <div className="hidden xl:block fixed right-4 top-32 space-y-8 opacity-20 pointer-events-none z-0">
+        <img src={sketchFootball} alt="" className="w-26 h-26 object-contain animate-float" style={{ animationDelay: '0.8s' }} />
+        <img src={fitBadminton} alt="" className="w-22 h-22 object-contain animate-float" style={{ animationDelay: '1.8s' }} />
+        <img src={sketchYoga} alt="" className="w-24 h-24 object-contain animate-float" style={{ animationDelay: '2.5s' }} />
+      </div>
+      <div className="hidden xl:block fixed right-8 bottom-32 space-y-8 opacity-20 pointer-events-none z-0">
+        <img src={sketchRunning} alt="" className="w-28 h-28 object-contain animate-float" style={{ animationDelay: '1.2s' }} />
+        <img src={fitFootball} alt="" className="w-20 h-20 object-contain animate-float" style={{ animationDelay: '2.2s' }} />
+      </div>
+
+      <div className="flex-1 bg-gradient-to-br from-primary via-secondary to-accent relative z-10">
         <div className="container mx-auto px-4 py-16 flex flex-col items-center justify-center text-white">
           <div className="text-center space-y-8 max-w-3xl">
           <div className="flex justify-center">
