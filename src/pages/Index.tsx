@@ -46,24 +46,24 @@ const Index = () => {
       
       {/* Left side decorative images */}
       <div className="hidden xl:block fixed left-4 top-20 space-y-8 opacity-20 pointer-events-none z-0">
-        <img src={sketchBasketball} alt="" className="w-24 h-24 object-contain animate-float" />
-        <img src={fitYoga} alt="" className="w-20 h-20 object-contain animate-float" style={{ animationDelay: '1s' }} />
-        <img src={sketchCricket} alt="" className="w-28 h-28 object-contain animate-float" style={{ animationDelay: '2s' }} />
+        <img src={sketchBasketball} alt="" className="w-12 h-12 object-contain animate-float" />
+        <img src={fitYoga} alt="" className="w-10 h-10 object-contain animate-float" style={{ animationDelay: '1s' }} />
+        <img src={sketchCricket} alt="" className="w-14 h-14 object-contain animate-float" style={{ animationDelay: '2s' }} />
       </div>
       <div className="hidden xl:block fixed left-8 bottom-20 space-y-8 opacity-20 pointer-events-none z-0">
-        <img src={sketchExercise} alt="" className="w-24 h-24 object-contain animate-float" style={{ animationDelay: '0.5s' }} />
-        <img src={fitGym} alt="" className="w-20 h-20 object-contain animate-float" style={{ animationDelay: '1.5s' }} />
+        <img src={sketchExercise} alt="" className="w-12 h-12 object-contain animate-float" style={{ animationDelay: '0.5s' }} />
+        <img src={fitGym} alt="" className="w-10 h-10 object-contain animate-float" style={{ animationDelay: '1.5s' }} />
       </div>
 
       {/* Right side decorative images */}
       <div className="hidden xl:block fixed right-4 top-32 space-y-8 opacity-20 pointer-events-none z-0">
-        <img src={sketchFootball} alt="" className="w-26 h-26 object-contain animate-float" style={{ animationDelay: '0.8s' }} />
-        <img src={fitBadminton} alt="" className="w-22 h-22 object-contain animate-float" style={{ animationDelay: '1.8s' }} />
-        <img src={sketchYoga} alt="" className="w-24 h-24 object-contain animate-float" style={{ animationDelay: '2.5s' }} />
+        <img src={sketchFootball} alt="" className="w-13 h-13 object-contain animate-float" style={{ animationDelay: '0.8s' }} />
+        <img src={fitBadminton} alt="" className="w-11 h-11 object-contain animate-float" style={{ animationDelay: '1.8s' }} />
+        <img src={sketchYoga} alt="" className="w-12 h-12 object-contain animate-float" style={{ animationDelay: '2.5s' }} />
       </div>
       <div className="hidden xl:block fixed right-8 bottom-32 space-y-8 opacity-20 pointer-events-none z-0">
-        <img src={sketchRunning} alt="" className="w-28 h-28 object-contain animate-float" style={{ animationDelay: '1.2s' }} />
-        <img src={fitFootball} alt="" className="w-20 h-20 object-contain animate-float" style={{ animationDelay: '2.2s' }} />
+        <img src={sketchRunning} alt="" className="w-14 h-14 object-contain animate-float" style={{ animationDelay: '1.2s' }} />
+        <img src={fitFootball} alt="" className="w-10 h-10 object-contain animate-float" style={{ animationDelay: '2.2s' }} />
       </div>
 
       <div className="flex-1 relative z-10">
