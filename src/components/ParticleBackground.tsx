@@ -51,7 +51,7 @@ const ParticleBackground = () => {
         particlesRef.current.push({
           x: Math.random() * canvas.width,
           y: Math.random() * canvas.height,
-          size: Math.random() * 5 + 3,
+          size: Math.random() * 3 + 2,
           speedX: (Math.random() - 0.5) * 0.5,
           speedY: (Math.random() - 0.5) * 0.5,
           color: colors[Math.floor(Math.random() * colors.length)],
