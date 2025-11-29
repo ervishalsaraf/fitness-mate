@@ -39,6 +39,9 @@ const Index = () => {
 
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden">
+      {/* Fixed gradient background layer */}
+      <div className="fixed inset-0 bg-gradient-to-br from-primary via-secondary to-accent z-0" />
+      
       <ParticleBackground />
       
       {/* Left side decorative images */}
@@ -63,7 +66,7 @@ const Index = () => {
         <img src={fitFootball} alt="" className="w-20 h-20 object-contain animate-float" style={{ animationDelay: '2.2s' }} />
       </div>
 
-      <div className="flex-1 bg-gradient-to-br from-primary via-secondary to-accent relative z-10">
+      <div className="flex-1 relative z-10">
         <div className="container mx-auto px-4 py-16 flex flex-col items-center justify-center text-white">
           <div className="text-center space-y-8 max-w-3xl">
           <div className="flex justify-center">
