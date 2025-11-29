@@ -35,11 +35,11 @@ const ParticleBackground = () => {
 
     // Color palette matching the theme
     const colors = [
-      'hsla(180, 75%, 45%, 0.6)',  // primary
-      'hsla(25, 95%, 58%, 0.6)',   // secondary
-      'hsla(142, 76%, 36%, 0.6)',  // accent
-      'hsla(195, 85%, 55%, 0.5)',  // light blue
-      'hsla(160, 70%, 45%, 0.5)',  // light green
+      'hsla(180, 75%, 55%, 0.8)',  // primary - brighter
+      'hsla(25, 95%, 65%, 0.8)',   // secondary - brighter
+      'hsla(142, 76%, 45%, 0.7)',  // accent
+      'hsla(195, 85%, 65%, 0.75)', // light blue - brighter
+      'hsla(160, 70%, 55%, 0.75)', // light green - brighter
     ];
 
     // Initialize particles
@@ -51,7 +51,7 @@ const ParticleBackground = () => {
         particlesRef.current.push({
           x: Math.random() * canvas.width,
           y: Math.random() * canvas.height,
-          size: Math.random() * 4 + 2,
+          size: Math.random() * 5 + 3,
           speedX: (Math.random() - 0.5) * 0.5,
           speedY: (Math.random() - 0.5) * 0.5,
           color: colors[Math.floor(Math.random() * colors.length)],
@@ -126,8 +126,8 @@ const ParticleBackground = () => {
   return (
     <canvas
       ref={canvasRef}
-      className="fixed top-0 left-0 w-full h-full pointer-events-none z-0"
-      style={{ mixBlendMode: 'screen' }}
+      className="fixed top-0 left-0 w-full h-full pointer-events-none z-[5]"
+      style={{ mixBlendMode: 'overlay' }}
     />
   );
 };
