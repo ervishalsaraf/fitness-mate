@@ -50,7 +50,13 @@ const Index = () => {
           <div className="space-y-3 text-white">
             <p className="text-lg font-bold leading-tight">🏃 Going for jogging?</p>
             <p className="text-base text-white/90">Looking for company?</p>
-            <p className="text-sm text-white/80">Register yourself &</p>
+            <div className="relative">
+              <div className="bg-gradient-to-r from-slate-300 via-white to-slate-300 text-slate-700 px-4 py-2 rounded-xl font-bold text-sm shadow-lg animate-shimmer bg-[length:200%_100%]">
+                <span>Register yourself</span>
+              </div>
+              <div className="absolute inset-0 bg-gradient-to-r from-slate-300/50 to-white/50 rounded-xl blur-xl -z-10 animate-pulse" />
+            </div>
+            <p className="text-sm text-white/80 text-center">&</p>
             <div className="relative mt-4">
               <div className="bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 text-amber-900 px-4 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 shadow-lg animate-shimmer bg-[length:200%_100%]">
                 <Sparkles className="h-4 w-4" />
