@@ -77,13 +77,28 @@ const Index = () => {
         <img src={fitGym} alt="" className="w-10 h-10 object-contain animate-float" style={{ animationDelay: '1.5s' }} />
       </div>
 
-      {/* Right side decorative images */}
-      <div className="hidden xl:block fixed right-4 top-32 space-y-8 opacity-20 pointer-events-none z-0">
-        <img src={sketchFootball} alt="" className="w-13 h-13 object-contain animate-float" style={{ animationDelay: '0.8s' }} />
-        <img src={fitBadminton} alt="" className="w-11 h-11 object-contain animate-float" style={{ animationDelay: '1.8s' }} />
-        <img src={sketchYoga} alt="" className="w-12 h-12 object-contain animate-float" style={{ animationDelay: '2.5s' }} />
+      {/* Right side promotional text */}
+      <div className="hidden xl:flex fixed right-6 top-1/2 -translate-y-1/2 z-20 flex-col items-end">
+        <div className="bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 p-6 shadow-2xl max-w-[200px]">
+          <div className="space-y-3 text-white">
+            <p className="text-lg font-bold leading-tight">🚴 Feeling stuck?</p>
+            <p className="text-base text-white/90">Escape with a private bike ride!</p>
+            <div className="relative cursor-pointer hover:scale-105 transition-transform" onClick={() => navigate('/groups')}>
+              <div className="bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-400 text-emerald-900 px-4 py-2 rounded-xl font-bold text-sm shadow-lg animate-shimmer bg-[length:200%_100%]">
+                <span>Plan with Buddies</span>
+              </div>
+              <div className="absolute inset-0 bg-gradient-to-r from-emerald-400/50 to-teal-300/50 rounded-xl blur-xl -z-10 animate-pulse" />
+            </div>
+            <p className="text-xs text-white/70 text-center mt-2">on FitConnect24</p>
+          </div>
+        </div>
       </div>
-      <div className="hidden xl:block fixed right-8 bottom-32 space-y-8 opacity-20 pointer-events-none z-0">
+
+      {/* Right side decorative images */}
+      <div className="hidden xl:block fixed right-4 top-16 opacity-20 pointer-events-none z-0">
+        <img src={sketchFootball} alt="" className="w-12 h-12 object-contain animate-float" style={{ animationDelay: '0.8s' }} />
+      </div>
+      <div className="hidden xl:block fixed right-8 bottom-20 space-y-8 opacity-20 pointer-events-none z-0">
         <img src={sketchRunning} alt="" className="w-14 h-14 object-contain animate-float" style={{ animationDelay: '1.2s' }} />
         <img src={fitFootball} alt="" className="w-10 h-10 object-contain animate-float" style={{ animationDelay: '2.2s' }} />
       </div>
