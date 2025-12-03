@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Activity, Users, Calendar, TrendingUp, Zap, PlusCircle } from "lucide-react";
+import { Activity, Users, Calendar, TrendingUp, Zap, PlusCircle, Sparkles } from "lucide-react";
 import Footer from "@/components/Footer";
 import ParticleBackground from "@/components/ParticleBackground";
 import fitJogging from "@/assets/fit-jogging.png";
@@ -44,11 +44,27 @@ const Index = () => {
       
       <ParticleBackground />
       
+      {/* Left side promotional text */}
+      <div className="hidden xl:flex fixed left-6 top-1/2 -translate-y-1/2 z-20 flex-col items-start">
+        <div className="bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 p-6 shadow-2xl max-w-[200px]">
+          <div className="space-y-3 text-white">
+            <p className="text-lg font-bold leading-tight">🏃 Going for jogging?</p>
+            <p className="text-base text-white/90">Looking for company?</p>
+            <p className="text-sm text-white/80">Register yourself &</p>
+            <div className="relative mt-4">
+              <div className="bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 text-amber-900 px-4 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 shadow-lg animate-shimmer bg-[length:200%_100%]">
+                <Sparkles className="h-4 w-4" />
+                <span>Invite Your Buddies</span>
+              </div>
+              <div className="absolute inset-0 bg-gradient-to-r from-amber-400/50 to-yellow-300/50 rounded-xl blur-xl -z-10 animate-pulse" />
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Left side decorative images */}
-      <div className="hidden xl:block fixed left-4 top-20 space-y-8 opacity-20 pointer-events-none z-0">
+      <div className="hidden xl:block fixed left-4 top-16 opacity-20 pointer-events-none z-0">
         <img src={sketchBasketball} alt="" className="w-12 h-12 object-contain animate-float" />
-        <img src={fitYoga} alt="" className="w-10 h-10 object-contain animate-float" style={{ animationDelay: '1s' }} />
-        <img src={sketchCricket} alt="" className="w-14 h-14 object-contain animate-float" style={{ animationDelay: '2s' }} />
       </div>
       <div className="hidden xl:block fixed left-8 bottom-20 space-y-8 opacity-20 pointer-events-none z-0">
         <img src={sketchExercise} alt="" className="w-12 h-12 object-contain animate-float" style={{ animationDelay: '0.5s' }} />
