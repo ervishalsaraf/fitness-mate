@@ -78,18 +78,29 @@ const Index = () => {
       </div>
 
       {/* Right side promotional text */}
-      <div className="hidden xl:flex fixed right-6 top-1/2 -translate-y-1/2 z-20 flex-col items-end">
-        <div className="bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 p-6 shadow-2xl max-w-[200px]">
+      <div className="hidden xl:flex fixed right-6 top-1/2 -translate-y-1/2 z-20 flex-col items-end gap-4">
+        <div className="bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 p-5 shadow-2xl max-w-[200px]">
           <div className="space-y-3 text-white">
             <p className="text-lg font-bold leading-tight">🚴 Feeling stuck?</p>
-            <p className="text-base text-white/90">Escape with a private bike ride!</p>
+            <p className="text-sm text-white/90">Escape with a private bike ride!</p>
             <div className="relative cursor-pointer hover:scale-105 transition-transform" onClick={() => navigate('/groups')}>
               <div className="bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-400 text-emerald-900 px-4 py-2 rounded-xl font-bold text-sm shadow-lg animate-shimmer bg-[length:200%_100%]">
                 <span>Plan with Buddies</span>
               </div>
               <div className="absolute inset-0 bg-gradient-to-r from-emerald-400/50 to-teal-300/50 rounded-xl blur-xl -z-10 animate-pulse" />
             </div>
-            <p className="text-xs text-white/70 text-center mt-2">on FitConnect24</p>
+          </div>
+        </div>
+        <div className="bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 p-5 shadow-2xl max-w-[200px]">
+          <div className="space-y-3 text-white">
+            <p className="text-lg font-bold leading-tight">🥾 Need a break?</p>
+            <p className="text-sm text-white/90">Start a private hiking event!</p>
+            <div className="relative cursor-pointer hover:scale-105 transition-transform" onClick={() => navigate('/groups')}>
+              <div className="bg-gradient-to-r from-purple-400 via-violet-300 to-purple-400 text-purple-900 px-4 py-2 rounded-xl font-bold text-sm shadow-lg animate-shimmer bg-[length:200%_100%]">
+                <span>Create Event</span>
+              </div>
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-400/50 to-violet-300/50 rounded-xl blur-xl -z-10 animate-pulse" />
+            </div>
           </div>
         </div>
       </div>
