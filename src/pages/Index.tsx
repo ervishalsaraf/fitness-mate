@@ -45,11 +45,11 @@ const Index = () => {
       <ParticleBackground />
       
       {/* Left side promotional text */}
-      <div className="hidden xl:flex fixed left-6 top-1/2 -translate-y-1/2 z-20 flex-col items-start">
-        <div className="bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 p-6 shadow-2xl max-w-[200px]">
+      <div className="hidden xl:flex fixed left-6 top-1/2 -translate-y-1/2 z-20 flex-col items-start gap-4">
+        <div className="bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 p-5 shadow-2xl max-w-[200px]">
           <div className="space-y-3 text-white">
             <p className="text-lg font-bold leading-tight">🏃 Going for jogging?</p>
-            <p className="text-base text-white/90">Looking for company?</p>
+            <p className="text-sm text-white/90">Looking for company?</p>
             <div className="relative cursor-pointer hover:scale-105 transition-transform" onClick={() => navigate('/auth')}>
               <div className="bg-gradient-to-r from-slate-300 via-white to-slate-300 text-slate-700 px-4 py-2 rounded-xl font-bold text-sm shadow-lg animate-shimmer bg-[length:200%_100%]">
                 <span>Register yourself</span>
@@ -57,12 +57,24 @@ const Index = () => {
               <div className="absolute inset-0 bg-gradient-to-r from-slate-300/50 to-white/50 rounded-xl blur-xl -z-10 animate-pulse" />
             </div>
             <p className="text-sm text-white/80 text-center">&</p>
-            <div className="relative mt-4 cursor-pointer hover:scale-105 transition-transform" onClick={() => navigate('/groups')}>
+            <div className="relative cursor-pointer hover:scale-105 transition-transform" onClick={() => navigate('/groups')}>
               <div className="bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 text-amber-900 px-4 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 shadow-lg animate-shimmer bg-[length:200%_100%]">
                 <Sparkles className="h-4 w-4" />
                 <span>Invite Your Buddies</span>
               </div>
               <div className="absolute inset-0 bg-gradient-to-r from-amber-400/50 to-yellow-300/50 rounded-xl blur-xl -z-10 animate-pulse" />
+            </div>
+          </div>
+        </div>
+        <div className="bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 p-5 shadow-2xl max-w-[200px]">
+          <div className="space-y-3 text-white">
+            <p className="text-lg font-bold leading-tight">🧘 Wanna relax?</p>
+            <p className="text-sm text-white/90">Join or create a yoga session!</p>
+            <div className="relative cursor-pointer hover:scale-105 transition-transform" onClick={() => navigate('/groups')}>
+              <div className="bg-gradient-to-r from-sky-400 via-cyan-300 to-sky-400 text-sky-900 px-4 py-2 rounded-xl font-bold text-sm shadow-lg animate-shimmer bg-[length:200%_100%]">
+                <span>Find Yoga Sessions</span>
+              </div>
+              <div className="absolute inset-0 bg-gradient-to-r from-sky-400/50 to-cyan-300/50 rounded-xl blur-xl -z-10 animate-pulse" />
             </div>
           </div>
         </div>
