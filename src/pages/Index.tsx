@@ -197,28 +197,17 @@ const Index = () => {
           </div>
 
           <div className="mt-16 bg-white/5 backdrop-blur-sm rounded-2xl p-8">
-            <h2 className="text-3xl font-bold mb-8 text-center">How It Works</h2>
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="text-center">
-                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">1</div>
-                <h3 className="font-semibold mb-2">Create or Join</h3>
-                <p className="text-sm text-white/80">Browse events for your favorite sports and activities</p>
-              </div>
-              <div className="text-center">
-                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">2</div>
-                <h3 className="font-semibold mb-2">Connect</h3>
-                <p className="text-sm text-white/80">Meet nearby fitness enthusiasts in your area</p>
-              </div>
-              <div className="text-center">
-                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">3</div>
-                <h3 className="font-semibold mb-2">Plan Games</h3>
-                <p className="text-sm text-white/80">Organize cricket, basketball, snooker, or yoga sessions</p>
-              </div>
-              <div className="text-center">
-                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">4</div>
-                <h3 className="font-semibold mb-2">Stay Active</h3>
-                <p className="text-sm text-white/80">Build your fitness community and achieve your goals</p>
-              </div>
+            <h2 className="text-3xl font-bold mb-6 text-center">About FitConnect24</h2>
+            <div className="space-y-5 text-white/90 text-lg leading-relaxed max-w-4xl mx-auto">
+              <p>
+                FitConnect24.com is a social-fitness platform designed to help you find workout partners and stay motivated. Whether you enjoy running, cycling, yoga, gym workouts, or group sports — you can discover nearby fitness buddies who share your interests and schedule.
+              </p>
+              <p>
+                Create a profile, set your preferred activities and availability, then browse or join existing events — or start your own private group session. Chat, coordinate schedules, and get reminders to stay active.
+              </p>
+              <p>
+                With FitConnect24, fitness becomes a shared journey. It's not about working out — it's about building a community, staying accountable, and making fitness social, fun, and consistent.
+              </p>
             </div>
           </div>
 
